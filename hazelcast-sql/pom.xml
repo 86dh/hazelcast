@@ -28,7 +28,7 @@
     <parent>
         <groupId>com.hazelcast</groupId>
         <artifactId>hazelcast-root</artifactId>
-        <version>5.5.0-SNAPSHOT</version>
+        <version>6.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -223,17 +223,6 @@
                                     pattern twice: "[com].google.[com]mon".
                                  -->
 
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>${relocation.root}.com.fasterxml.jackson</shadedPattern>
-                                    <excludes>
-                                        <!--
-                                        The annotation package is excluded so the relocated classes are
-                                        able to process non-relocated annotations, which are used by the users.
-                                        -->
-                                        <exclude>com.fasterxml.jackson.annotation.*</exclude>
-                                    </excludes>
-                                </relocation>
                                 <relocation>
                                     <pattern>org.apache.calcite</pattern>
                                     <shadedPattern>${relocation.root}.org.apache.calcite</shadedPattern>

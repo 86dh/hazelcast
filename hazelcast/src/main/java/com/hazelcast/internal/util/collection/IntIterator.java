@@ -45,6 +45,7 @@ public class IntIterator implements Iterator<Integer> {
         this.position = -1;
     }
 
+    @Override
     public boolean hasNext() {
         final int[] values = this.values;
         while (position < values.length) {
@@ -56,10 +57,12 @@ public class IntIterator implements Iterator<Integer> {
         return false;
     }
 
+    @Override
     public Integer next() {
         return nextValue();
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("remove");
     }

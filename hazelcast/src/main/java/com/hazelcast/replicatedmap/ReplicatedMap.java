@@ -71,6 +71,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
      * <p>If some node fails on executing the operation, it is retried for at most
      * 5 times (on the failing nodes only).
      */
+    @Override
     void clear();
 
     /**
@@ -108,7 +109,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
     UUID addEntryListener(@Nonnull EntryListener<K, V> listener, @Nullable K key);
 
     /**
-     * Adds an continuous entry listener for this map. The listener will be notified
+     * Adds a continuous entry listener for this map. The listener will be notified
      * for map add/remove/update/evict events filtered by the given predicate.
      *
      * @param listener  the entry listener to add
@@ -118,7 +119,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
     UUID addEntryListener(@Nonnull EntryListener<K, V> listener, @Nonnull Predicate<K, V> predicate);
 
     /**
-     * Adds an continuous entry listener for this map. The listener will be notified
+     * Adds a continuous entry listener for this map. The listener will be notified
      * for map add/remove/update/evict events filtered by the given predicate.
      *
      * @param listener  the entry listener
@@ -163,6 +164,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
      * @return A collection view of the values contained in this map.
      */
     @Nonnull
+    @Override
     Collection<V> values();
 
     /**
@@ -208,6 +210,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
      * @return A lazy set view of the mappings contained in this map.
      */
     @Nonnull
+    @Override
     Set<Entry<K, V>> entrySet();
 
     /**
@@ -243,6 +246,7 @@ public interface ReplicatedMap<K, V> extends Map<K, V>, DistributedObject {
      * @return A lazy {@link Set} view of the keys contained in this map.
      */
     @Nonnull
+    @Override
     Set<K> keySet();
 
     /**

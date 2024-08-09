@@ -120,9 +120,9 @@ class AwsEc2Api {
     }
 
     private static void logInstanceName(XmlNode item) {
-        LOGGER.fine(String.format("Accepting EC2 instance [%s][%s]",
+        LOGGER.fine("Accepting EC2 instance [%s][%s]",
             parseInstanceName(item).orElse("<unknown>"),
-            item.getValue("privateipaddress")));
+            item.getValue("privateipaddress"));
     }
 
     private static Optional<String> parseInstanceName(XmlNode nodeHolder) {
@@ -165,7 +165,7 @@ class AwsEc2Api {
      * </ul>
      * <p>
      * This is performed regardless of the configured use-public-ip value
-     * to make external smart clients able to work properly when possible.
+     * to make external multi socket clients able to work properly when possible.
      */
     Map<String, String> describeNetworkInterfaces(List<String> privateAddresses, AwsCredentials credentials) {
         if (privateAddresses.isEmpty()) {

@@ -31,15 +31,11 @@ import com.hazelcast.internal.partition.PartitionReplica;
 import com.hazelcast.internal.partition.PartitionTableView;
 import com.hazelcast.internal.partition.impl.PartitionStateManagerImpl;
 import com.hazelcast.internal.util.scheduler.CoalescingDelayedTrigger;
-import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.NodeEngineImpl;
-import com.hazelcast.spi.impl.executionservice.ExecutionService;
 import com.hazelcast.spi.partitiongroup.MemberGroup;
-import com.hazelcast.spi.properties.HazelcastProperty;
 import com.hazelcast.version.Version;
 
 import javax.annotation.Nullable;
-import java.nio.channels.CancelledKeyException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,26 +44,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.instance.EndpointQualifier.CLIENT;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class ClusterViewListenerService {
-    private static final HazelcastProperty PUSH_PERIOD_IN_SECONDS
-            = new HazelcastProperty("hazelcast.client.internal.push.period.seconds", 30, SECONDS);
+public class ClusterViewListenerService extends AbstractListenerService {
     private static final long PARTITION_UPDATE_DELAY_MS = 100;
     private static final long PARTITION_UPDATE_MAX_DELAY_MS = 500;
 
-    private final Map<ClientEndpoint, Long> clusterListeningEndpoints = new ConcurrentHashMap<>();
-    private final NodeEngine nodeEngine;
     private final boolean advancedNetworkConfigEnabled;
-    private final AtomicBoolean pushScheduled = new AtomicBoolean();
     private final CoalescingDelayedTrigger delayedPartitionUpdateTrigger;
 
     /**
@@ -82,40 +69,36 @@ public class ClusterViewListenerService {
     private final AtomicLong latestPartitionStamp = new AtomicLong();
 
     ClusterViewListenerService(NodeEngineImpl nodeEngine) {
-        this.nodeEngine = nodeEngine;
+        super(nodeEngine, nodeEngine.getLogger(ClusterViewListenerService.class), null);
         advancedNetworkConfigEnabled = nodeEngine.getConfig().getAdvancedNetworkConfig().isEnabled();
         delayedPartitionUpdateTrigger = new CoalescingDelayedTrigger(nodeEngine.getExecutionService(),
                 PARTITION_UPDATE_DELAY_MS, PARTITION_UPDATE_MAX_DELAY_MS, this::pushPartitionTableView);
     }
 
-    /**
-     * See <a href="https://github.com/hazelcast/hazelcast-mono/pull/871#issuecomment-1983519122">
-     * this comment</a> for why we do not use an acknowledgement mechanism.
-     */
-    private void schedulePeriodicPush() {
-        ExecutionService executor = nodeEngine.getExecutionService();
-        int pushPeriodInSeconds = nodeEngine.getProperties().getSeconds(PUSH_PERIOD_IN_SECONDS);
-        executor.scheduleWithRepetition(this::pushView, pushPeriodInSeconds, pushPeriodInSeconds, SECONDS);
-    }
-
-    private void pushView() {
+    @Override
+    protected void pushView() {
         pushPartitionTableView();
 
         MembersView membersView = getMembersView();
         ClientMessage memberListViewMessage = getMemberListViewMessage(membersView);
+        logger.finest("Sending members view to all listening clients: %s", membersView);
         sendToListeningEndpoints(memberListViewMessage);
 
         Collection<Collection<UUID>> memberGroups = toMemberGroups(membersView);
         ClientMessage memberGroupsViewEvent = ClientAddClusterViewListenerCodec
                 .encodeMemberGroupsViewEvent(membersView.getVersion(), memberGroups);
+        logger.finest("Sending member groups to all listening clients: %s", memberGroups);
         sendToListeningEndpoints(memberGroupsViewEvent);
 
-        sendToListeningEndpoints(getClusterVersionMessage());
+        ClientMessage clusterVersionMessage = getClusterVersionMessage();
+        logger.finest("Sending cluster version to all listening clients: %s", clusterVersionMessage);
+        sendToListeningEndpoints(clusterVersionMessage);
     }
 
     private void pushPartitionTableView() {
         ClientMessage partitionViewMessage = getPartitionViewMessage();
         if (partitionViewMessage != null) {
+            logger.finest("Sending partition table view to all listening clients: %s", partitionViewMessage);
             sendToListeningEndpoints(partitionViewMessage);
         }
     }
@@ -126,40 +109,18 @@ public class ClusterViewListenerService {
 
     public void onMemberListChange() {
         MembersView membersView = getMembersView();
+        logger.finest("Sending members view to all listening clients: %s", membersView);
         sendToListeningEndpoints(getMemberListViewMessage(membersView));
     }
 
     public void onClusterVersionChange() {
-        sendToListeningEndpoints(getClusterVersionMessage());
+        ClientMessage clusterVersionMessage = getClusterVersionMessage();
+        logger.finest("Sending cluster version to all listening clients: %s", clusterVersionMessage);
+        sendToListeningEndpoints(clusterVersionMessage);
     }
 
-    private void sendToListeningEndpoints(ClientMessage clientMessage) {
-        for (Entry<ClientEndpoint, Long> entry : clusterListeningEndpoints.entrySet()) {
-            Long correlationId = entry.getValue();
-            // Share the partition and membership tables, copy only the initial frame.
-            ClientMessage message = clientMessage.copyWithNewCorrelationId(correlationId);
-            ClientEndpoint clientEndpoint = entry.getKey();
-            Connection connection = clientEndpoint.getConnection();
-            write(message, connection);
-        }
-    }
-
-    private void write(ClientMessage message, Connection connection) {
-        try {
-            connection.write(message);
-        } catch (CancelledKeyException ignored) {
-            // If connection closes while writing, we can get CancelledKeyException.
-            // In that case, we can safely ignore the exception.
-        }
-    }
-
-    public void registerListener(ClientEndpoint clientEndpoint, long correlationId) {
-        if (pushScheduled.compareAndSet(false, true)) {
-            schedulePeriodicPush();
-        }
-        clusterListeningEndpoints.put(clientEndpoint, correlationId);
-        Connection connection = clientEndpoint.getConnection();
-
+    @Override
+    protected void sendUpdate(ClientEndpoint clientEndpoint, Connection connection, long correlationId) {
         MembersView processedMembersView = getMembersView();
         ClientMessage memberListViewMessage = getMemberListViewMessage(processedMembersView);
         memberListViewMessage.setCorrelationId(correlationId);
@@ -180,6 +141,9 @@ public class ClusterViewListenerService {
         ClientMessage clusterVersionMessage = getClusterVersionMessage();
         clusterVersionMessage.setCorrelationId(correlationId);
         write(clusterVersionMessage, connection);
+        logger.finest("Sent cluster view update to %s: members view: %s, partition table: %s, member groups: %s, "
+                        + "cluster version: %s",
+                connection, processedMembersView, partitionViewMessage, memberGroups, clusterVersionMessage);
     }
 
     public MembersView getMembersView() {
@@ -287,10 +251,6 @@ public class ClusterViewListenerService {
         return ClientAddClusterViewListenerCodec.encodeClusterVersionEvent(version);
     }
 
-    public void deregisterListener(ClientEndpoint clientEndpoint) {
-        clusterListeningEndpoints.remove(clientEndpoint);
-    }
-
     private Address clientAddressOf(Address memberAddress) {
         if (!advancedNetworkConfigEnabled) {
             return memberAddress;
@@ -325,10 +285,5 @@ public class ClusterViewListenerService {
                     k -> new LinkedList<>()).add(partitionId);
         }
         return partitionsMap;
-    }
-
-    // for test purpose only
-    public Map<ClientEndpoint, Long> getClusterListeningEndpoints() {
-        return clusterListeningEndpoints;
     }
 }

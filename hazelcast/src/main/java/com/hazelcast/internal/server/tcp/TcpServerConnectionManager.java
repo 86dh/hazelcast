@@ -131,7 +131,7 @@ public class TcpServerConnectionManager extends TcpServerConnectionManagerBase
     @Nonnull
     public List<ServerConnection> getAllConnections(@Nonnull Address address) {
         UUID instanceUuid = addressRegistry.uuidOf(address);
-        // Because duplicate connections can be established on the planes and
+        // Because duplicate connections can be established on the planes, and
         // we don't keep all duplicates on the planes, we need to iterate over
         // connections set which stores all active connections.
         return instanceUuid != null
@@ -330,6 +330,7 @@ public class TcpServerConnectionManager extends TcpServerConnectionManagerBase
         return c;
     }
 
+    @Override
     @Probe(name = TCP_METRIC_ENDPOINT_MANAGER_COUNT, level = MANDATORY)
     public int connectionCount() {
         int c = 0;

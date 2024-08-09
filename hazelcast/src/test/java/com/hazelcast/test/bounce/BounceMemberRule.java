@@ -133,6 +133,7 @@ public class BounceMemberRule implements TestRule {
     private static final int TEST_TASK_TIMEOUT_SECONDS = 30;
     private static final int DEFAULT_BOUNCING_INTERVAL_SECONDS = 2;
     private static final long DEFAULT_MAXIMUM_STALE_SECONDS = STALENESS_DETECTOR_DISABLED;
+    private static final AtomicInteger threadCounter = new AtomicInteger();
 
     private final BounceTestConfiguration bounceTestConfig;
     private final AtomicBoolean testRunning = new AtomicBoolean();
@@ -145,7 +146,7 @@ public class BounceMemberRule implements TestRule {
     private volatile TestHazelcastInstanceFactory factory;
 
     private FutureTask<Runnable> bouncingMembersTask;
-    private AtomicInteger driverCounter = new AtomicInteger();
+    private final AtomicInteger driverCounter = new AtomicInteger();
     private ExecutorService taskExecutor;
 
     private BounceMemberRule(BounceTestConfiguration bounceTestConfig) {
@@ -244,7 +245,8 @@ public class BounceMemberRule implements TestRule {
         assert tasks != null && tasks.length > 0 : "Some tasks must be submitted for execution";
 
         Future[] futures = new Future[tasks.length];
-        taskExecutor = Executors.newFixedThreadPool(tasks.length);
+        taskExecutor = Executors.newFixedThreadPool(tasks.length,
+                r -> new Thread(r, "bounce-task-thread-" + threadCounter.getAndIncrement()));
         for (int i = 0; i < tasks.length; i++) {
             Runnable task = tasks[i];
             progressMonitor.registerTask(task);
@@ -554,7 +556,6 @@ public class BounceMemberRule implements TestRule {
             // rotate members 1..members.length(), member.get(0) is the steady member
             int divisor = members.length() - 1;
             int i = 1;
-            int nextInstance;
             try {
                 while (testRunning.get()) {
                     if (bounceTestConfig.isUseTerminate()) {
@@ -562,7 +563,6 @@ public class BounceMemberRule implements TestRule {
                     } else {
                         members.get(i).shutdown();
                     }
-                    nextInstance = i % divisor + 1;
                     sleepSecondsWhenRunning(bouncingIntervalSeconds);
                     if (!testRunning.get()) {
                         break;
@@ -571,7 +571,7 @@ public class BounceMemberRule implements TestRule {
                     members.set(i, factory.newHazelcastInstance(memberConfigSupplier.get()));
                     sleepSecondsWhenRunning(bouncingIntervalSeconds);
                     // move to next member
-                    i = nextInstance;
+                    i = i % divisor + 1;
                 }
             } catch (Throwable t) {
                 LOGGER.warning("Error while bouncing members", t);

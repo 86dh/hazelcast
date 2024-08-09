@@ -25,6 +25,7 @@ import com.hazelcast.spi.merge.HyperLogLogMergePolicy;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static com.hazelcast.internal.util.Preconditions.checkAsyncBackupCount;
 import static com.hazelcast.internal.util.Preconditions.checkBackupCount;
@@ -109,6 +110,7 @@ public class CardinalityEstimatorConfig implements IdentifiedDataSerializable, N
      *
      * @return the name of the estimator
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -119,6 +121,7 @@ public class CardinalityEstimatorConfig implements IdentifiedDataSerializable, N
      * @param name the name of the estimator
      * @return the cardinality estimator config instance
      */
+    @Override
     public CardinalityEstimatorConfig setName(String name) {
         checkNotNull(name);
         this.name = name;
@@ -280,11 +283,10 @@ public class CardinalityEstimatorConfig implements IdentifiedDataSerializable, N
         if (asyncBackupCount != that.asyncBackupCount) {
             return false;
         }
-        if (splitBrainProtectionName != null ? !splitBrainProtectionName.equals(that.splitBrainProtectionName)
-                : that.splitBrainProtectionName != null) {
+        if (!Objects.equals(splitBrainProtectionName, that.splitBrainProtectionName)) {
             return false;
         }
-        if (mergePolicyConfig != null ? !mergePolicyConfig.equals(that.mergePolicyConfig) : that.mergePolicyConfig != null) {
+        if (!Objects.equals(mergePolicyConfig, that.mergePolicyConfig)) {
             return false;
         }
 

@@ -19,6 +19,7 @@ package com.hazelcast.client;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientSecurityConfig;
 import com.hazelcast.client.config.ConnectionRetryConfig;
+import com.hazelcast.client.impl.connection.tcp.RoutingMode;
 import com.hazelcast.client.impl.spi.impl.ClientExecutionServiceImpl;
 import com.hazelcast.client.properties.ClientProperty;
 import com.hazelcast.client.test.TestHazelcastFactory;
@@ -124,13 +125,13 @@ public class ClientRegressionWithMockNetworkTest extends HazelcastTestSupport {
     }
 
     @Test
-    public void testOperationRedo_smartRoutingDisabled() {
+    public void testOperationRedo_allMembersRoutingDisabled() {
         HazelcastInstance hz1 = hazelcastFactory.newHazelcastInstance();
         hazelcastFactory.newHazelcastInstance();
 
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.getNetworkConfig().setRedoOperation(true);
-        clientConfig.getNetworkConfig().setSmartRouting(false);
+        clientConfig.getNetworkConfig().getClusterRoutingConfig().setRoutingMode(RoutingMode.SINGLE_MEMBER);
         HazelcastInstance client = hazelcastFactory.newHazelcastClient(clientConfig);
 
         Thread thread = new Thread(() -> {
@@ -439,18 +440,22 @@ public class ClientRegressionWithMockNetworkTest extends HazelcastTestSupport {
         SamplePortable() {
         }
 
+        @Override
         public int getFactoryId() {
             return 5;
         }
 
+        @Override
         public int getClassId() {
             return 6;
         }
 
+        @Override
         public void writePortable(PortableWriter writer) throws IOException {
             writer.writeInt("a", a);
         }
 
+        @Override
         public void readPortable(PortableReader reader) throws IOException {
             a = reader.readInt("a");
         }

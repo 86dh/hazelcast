@@ -29,9 +29,14 @@
     <parent>
         <groupId>com.hazelcast.jet</groupId>
         <artifactId>hazelcast-jet-extensions</artifactId>
-        <version>5.5.0-SNAPSHOT</version>
+        <version>6.0.0-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <!-- needed for CheckStyle -->
+        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+    </properties>
+    
     <build>
         <plugins>
             <plugin>
@@ -199,7 +204,7 @@
         <dependency>
             <groupId>com.couchbase.client</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.7.0</version>
+            <version>3.7.1</version>
             <scope>test</scope>
         </dependency>
         <!-- Neo4J-->
@@ -223,7 +228,7 @@
         <dependency>
             <groupId>io.lettuce</groupId>
             <artifactId>lettuce-core</artifactId>
-            <version>6.3.2.RELEASE</version>
+            <version>6.4.0.RELEASE</version>
             <scope>test</scope>
         </dependency>
         <!-- AWS SQS-->
@@ -254,5 +259,16 @@
             <artifactId>commons-codec</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Neo4J connector uses Guava dependency, but we don't have Guava dependency in HZ classpath.
+             Add guava to test environment, so that Neo4J connectors can use this library
+        -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.2.1-jre</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

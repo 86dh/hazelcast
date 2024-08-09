@@ -22,7 +22,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.hazelcast.com/schema/spring
-        http://www.hazelcast.com/schema/spring/hazelcast-spring-5.5.xsd">
+        http://www.hazelcast.com/schema/spring/hazelcast-spring-6.0.xsd">
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
           p:systemPropertiesModeName="SYSTEM_PROPERTIES_MODE_OVERRIDE">
@@ -55,8 +55,9 @@
             <hz:property name="hazelcast.client.retry.count">13</hz:property>
         </hz:properties>
         <hz:network connection-timeout="1000"
-                    redo-operation="true"
-                    smart-routing="true">
+                    redo-operation="true">
+            <hz:cluster-routing mode="ALL_MEMBERS"/>
+
             <hz:member>127.0.0.1:6150</hz:member>
             <hz:member>127.0.0.1:6151</hz:member>
             <hz:member>127.0.0.1:6152</hz:member>
@@ -80,8 +81,8 @@
     <hz:client id="client2">
         <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>
         <hz:network connection-timeout="1000"
-                    redo-operation="false"
-                    smart-routing="false">
+                    redo-operation="false">
+            <hz:cluster-routing mode="SINGLE_MEMBER"/>
 
             <hz:member>127.0.0.1:6150</hz:member>
             <hz:member>127.0.0.1:6151</hz:member>
@@ -106,8 +107,8 @@
     <hz:client id="client3">
         <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>
         <hz:network connection-timeout="1000"
-                    redo-operation="false"
-                    smart-routing="false">
+                    redo-operation="false">
+            <hz:cluster-routing mode="SINGLE_MEMBER"/>
 
             <hz:member>127.0.0.1:6150</hz:member>
             <hz:member>127.0.0.1:6151</hz:member>
@@ -192,8 +193,8 @@
     <hz:client id="client4">
         <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>
         <hz:network connection-timeout="1000"
-                    redo-operation="false"
-                    smart-routing="false">
+                    redo-operation="false">
+            <hz:cluster-routing mode="SINGLE_MEMBER"/>
 
             <hz:member>127.0.0.1:6150</hz:member>
             <hz:member>127.0.0.1:6151</hz:member>
@@ -311,8 +312,8 @@
     <hz:client id="client7-empty-serialization-config">
         <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>
         <hz:network connection-timeout="1000"
-                    redo-operation="false"
-                    smart-routing="false">
+                    redo-operation="false">
+            <hz:cluster-routing mode="SINGLE_MEMBER"/>
 
             <hz:member>127.0.0.1:6150</hz:member>
             <hz:member>127.0.0.1:6151</hz:member>

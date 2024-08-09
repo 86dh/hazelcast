@@ -35,6 +35,7 @@ public abstract class AbstractJoinTest extends HazelcastTestSupport {
 
     protected void testJoin(Config config) {
         config.setProperty(ClusterProperty.WAIT_SECONDS_BEFORE_JOIN.getName(), "1");
+        config.setProperty(ClusterProperty.ASYNC_JOIN_STRATEGY_ENABLED.getName(), "false");
 
         HazelcastInstance h1 = Hazelcast.newHazelcastInstance(config);
         assertClusterSize(1, h1);
@@ -85,9 +86,6 @@ public abstract class AbstractJoinTest extends HazelcastTestSupport {
      * <p>
      * This method expects that an IllegalStateException is thrown when the second HazelcastInstance is created, and
      * it doesn't join the cluster but gets killed instead.
-     *
-     * @param config1
-     * @param config2
      */
     protected void assertIncompatible(Config config1, Config config2) {
         HazelcastInstance hz1 = Hazelcast.newHazelcastInstance(config1);

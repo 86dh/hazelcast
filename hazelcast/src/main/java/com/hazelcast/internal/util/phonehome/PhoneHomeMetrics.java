@@ -63,9 +63,9 @@ public enum PhoneHomeMetrics implements Metric {
     PYTHON_CLIENT_VERSIONS("cpycv"),
     GO_CLIENT_VERSIONS("cgocv"),
     CL_CLIENT_VERSIONS("cclcv"),
-    SMART_CLIENTS_COUNT("smartclients"),
-    UNISOCKET_CLIENTS_COUNT("unisocketclients"),
-    SUBSET_CLIENTS_COUNT("subsetclients"),
+    ALL_MEMBERS_CLIENTS_COUNT("allmembersclients"),
+    SINGLE_MEMBER_CLIENTS_COUNT("singlememberclients"),
+    MULTI_MEMBER_CLIENTS_COUNT("multimemberclients"),
 
     //CLUSTER INFO METRICS
     UUID_OF_CLUSTER("m"),
@@ -103,6 +103,8 @@ public enum PhoneHomeMetrics implements Metric {
     AVERAGE_PUT_LATENCY_OF_MAPS_WITHOUT_MAPSTORE("mpptla"),
     AVERAGE_GET_LATENCY_OF_MAPS_USING_MAPSTORE("mpgtlams"),
     AVERAGE_GET_LATENCY_OF_MAPS_WITHOUT_MAPSTORE("mpgtla"),
+    TOTAL_MAP_VALUES_CALLS("mpvaluesct"),
+    TOTAL_MAP_ENTRYSET_CALLS("mpentriesct"),
 
     //CACHE METRICS
     COUNT_OF_CACHES("cact"),

@@ -21,7 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 /**
  * A delayed result-bearing action that can be cancelled. Usually a scheduled future is the result of scheduling a task with a
  * {@link IScheduledExecutorService}.
- *
+ * <p>
  * Enhances the default {@link ScheduledFuture} API with support of statistics and time measurement info, through {@link
  * ScheduledTaskStatistics}
  *
@@ -42,7 +42,7 @@ public interface IScheduledFuture<V>
      * Returns the statistics and time measurement info of the execution of this scheduled future in the {@link
      * IScheduledExecutorService} it was scheduled.
      *
-     * @return An instance of {@link ScheduledTaskStatistics}, holding all stas and measurements
+     * @return An instance of {@link ScheduledTaskStatistics}, holding all statistics and measurements
      */
     ScheduledTaskStatistics getStats();
 
@@ -70,6 +70,7 @@ public interface IScheduledFuture<V>
      * @return {@code false} if the task could not be cancelled, typically because it has already completed normally;
      * {@code true} otherwise
      */
+    @Override
     boolean cancel(boolean mayInterruptIfRunning);
 
 }

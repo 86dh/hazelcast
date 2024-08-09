@@ -309,6 +309,7 @@ public class Long2ObjectHashMap<V> implements Map<Long, V> {
         return entrySet;
     }
 
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append('{');
@@ -528,9 +529,6 @@ public class Long2ObjectHashMap<V> implements Map<Long, V> {
             }
             throw new NoSuchElementException();
         }
-
-        @Override
-        public abstract T next();
 
         @Override
         public void remove() {

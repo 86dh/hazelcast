@@ -86,6 +86,7 @@ public abstract class CollectionConfig<T extends CollectionConfig>
      *
      * @return the name of this collection
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -96,6 +97,7 @@ public abstract class CollectionConfig<T extends CollectionConfig>
      * @param name the name of this collection
      * @return the updated collection configuration
      */
+    @Override
     public T setName(String name) {
         this.name = name;
         return (T) this;
@@ -290,6 +292,7 @@ public abstract class CollectionConfig<T extends CollectionConfig>
      * @return the updated {@link CollectionConfig} instance
      * @since 5.4
      */
+    @Override
     public T setUserCodeNamespace(@Nullable String userCodeNamespace) {
         this.userCodeNamespace = userCodeNamespace;
         return (T) this;
@@ -340,11 +343,10 @@ public abstract class CollectionConfig<T extends CollectionConfig>
         if (this == o) {
             return true;
         }
-        if (!(o instanceof CollectionConfig)) {
+        if (!(o instanceof CollectionConfig<?> that)) {
             return false;
         }
 
-        CollectionConfig<?> that = (CollectionConfig<?>) o;
         if (backupCount != that.backupCount) {
             return false;
         }
@@ -387,7 +389,7 @@ public abstract class CollectionConfig<T extends CollectionConfig>
     }
 
     /**
-     * Returns field names with values as concatenated String so it can be used in child classes' toString() methods.
+     * Returns field names with values as concatenated String, so it can be used in child classes' toString() methods.
      */
     protected String fieldsToString() {
         return "name='" + name

@@ -17,6 +17,7 @@
 package com.hazelcast.client.impl.protocol.task;
 
 import com.hazelcast.auditlog.AuditlogTypeIds;
+import com.hazelcast.client.impl.ClientEngineImpl;
 import com.hazelcast.client.impl.ClusterViewListenerService;
 import com.hazelcast.client.impl.connection.tcp.RoutingMode;
 import com.hazelcast.client.impl.ClusterViewListenerService.PartitionsView;
@@ -24,6 +25,7 @@ import com.hazelcast.client.impl.protocol.AuthenticationStatus;
 import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.cluster.Address;
 import com.hazelcast.core.HazelcastInstanceNotActiveException;
+import com.hazelcast.cp.CPGroupsSnapshot;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.internal.cluster.MemberInfo;
 import com.hazelcast.internal.cluster.impl.MembersView;
@@ -66,6 +68,7 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
     transient byte clientSerializationVersion;
     transient String clientVersion;
     transient byte routingMode;
+    transient boolean cpDirectToLeaderRouting;
 
     AuthenticationBaseMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
         super(clientMessage, node, connection);
@@ -140,8 +143,7 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
     }
 
     private AuthenticationStatus authenticate(SecurityContext securityContext) {
-        String nodeClusterName = nodeEngine.getConfig().getClusterName();
-        if (!nodeClusterName.equals(clusterName)) {
+        if (!verifyClusterName()) {
             return CREDENTIALS_FAILED;
         }
 
@@ -174,18 +176,22 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
                     + " is disabled on the member, and client sends not-null username or password.");
             return CREDENTIALS_FAILED;
         }
-        String nodeClusterName = nodeEngine.getConfig().getClusterName();
-        boolean clusterNameMatched = nodeClusterName.equals(clusterName);
-        return clusterNameMatched ? AUTHENTICATED : CREDENTIALS_FAILED;
+
+        return verifyClusterName() ? AUTHENTICATED : CREDENTIALS_FAILED;
+    }
+
+    private boolean verifyClusterName() {
+        boolean skipClusterNameCheck =
+            nodeEngine.getProperties().getBoolean(ClientEngineImpl.SKIP_CLUSTER_NAME_CHECK_DURING_CONNECTION);
+
+        return skipClusterNameCheck || nodeEngine.getConfig().getClusterName().equals(clusterName);
     }
 
     private ClientMessage prepareUnauthenticatedClientMessage() {
         boolean failoverSupported = nodeEngine.getNode().getNodeExtension().isClientFailoverSupported();
         Connection connection = endpoint.getConnection();
-        if (logger.isFineEnabled()) {
-            logger.fine("Received auth from " + connection + " with clientUuid " + clientUuid + " and clientName " + clientName
-                    + ", authentication failed");
-        }
+        logger.fine("Received auth from %s with clientUuid %s and clientName %s, authentication failed", connection, clientUuid,
+                clientName);
         byte status = CREDENTIALS_FAILED.getId();
 
         return encodeUnauthenticated(status, failoverSupported);
@@ -212,7 +218,7 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
         setConnectionType();
         setTpcTokenToEndpoint();
         endpoint.authenticated(clientUuid, credentials, clientVersion, clientMessage.getCorrelationId(), clientName, labels,
-                RoutingMode.getById(routingMode));
+                RoutingMode.getById(routingMode), cpDirectToLeaderRouting);
         validateNodeStart();
         final UUID clusterId = nodeEngine.getClusterService().getClusterId();
         // additional check: cluster id may be null when member has not started yet;
@@ -237,10 +243,18 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
         MembersView membersView = clusterViewListenerService.getMembersView();
         PartitionsView partitionsView = clusterViewListenerService.getPartitionsView();
         Collection<Collection<UUID>> memberGroups = clusterViewListenerService.toMemberGroups(membersView);
+
+        CPGroupsSnapshot cpMemberSnapshot = CPGroupsSnapshot.EMPTY;
         boolean enterprise = nodeEngine.getNode().getBuildInfo().isEnterprise();
+        if (enterprise && nodeEngine.getConfig().getCPSubsystemConfig().getGroupSize() > 0) {
+            // The snapshot will be empty if ADVANCED_CP license component is not present
+            cpMemberSnapshot = nodeEngine.getHazelcastInstance().getCPSubsystem()
+                                         .getCPSubsystemManagementService().getCurrentGroupsSnapshot();
+        }
+
         Version clusterVersion = nodeEngine.getClusterService().getClusterVersion();
         Map<String, String> keyValuePairs = createKeyValuePairs(
-                memberGroups, membersView.getVersion(), enterprise, clusterVersion);
+                memberGroups, membersView.getVersion(), enterprise, clusterVersion, cpMemberSnapshot);
 
         return encodeAuthenticationResponse(status, thisAddress, uuid, serializationService.getVersion(), serverVersion,
                 nodeEngine.getPartitionService().getPartitionCount(), clusterId, failoverSupported,

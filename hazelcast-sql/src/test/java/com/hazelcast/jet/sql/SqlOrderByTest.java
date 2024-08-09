@@ -849,7 +849,7 @@ public class SqlOrderByTest extends HazelcastTestSupport {
         for (String indexAttr : indexAttrs) {
             indexConfig.addAttribute(indexAttr);
         }
-        if (indexAttrs.size() > 0) {
+        if (!indexAttrs.isEmpty()) {
             map.addIndex(indexConfig);
         }
 
@@ -929,8 +929,6 @@ public class SqlOrderByTest extends HazelcastTestSupport {
     }
 
     /**
-     * @param sql
-     * @param expectedCount
      * @param stopEarly     if entire result should be fetched first
      *                      or fail as soon as there are more rows than expected
      *                      (useful if the query might loop infinitely).

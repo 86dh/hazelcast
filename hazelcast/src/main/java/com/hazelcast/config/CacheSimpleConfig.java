@@ -172,6 +172,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
      *
      * @return the name of the {@link com.hazelcast.cache.ICache}
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -182,6 +183,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
      * @param name the name to set for this {@link com.hazelcast.cache.ICache}
      * @return the current cache config instance
      */
+    @Override
     public CacheSimpleConfig setName(String name) {
         this.name = name;
         return this;
@@ -780,6 +782,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
      * @return the updated {@link CacheSimpleConfig} instance
      * @since 5.4
      */
+    @Override
     public CacheSimpleConfig setUserCodeNamespace(@Nullable String userCodeNamespace) {
         this.userCodeNamespace = userCodeNamespace;
         return this;
@@ -873,11 +876,9 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
         if (this == o) {
             return true;
         }
-        if (!(o instanceof CacheSimpleConfig)) {
+        if (!(o instanceof CacheSimpleConfig that)) {
             return false;
         }
-
-        CacheSimpleConfig that = (CacheSimpleConfig) o;
 
         if (statisticsEnabled != that.statisticsEnabled) {
             return false;
@@ -1088,12 +1089,10 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
 
             ExpiryPolicyFactoryConfig that = (ExpiryPolicyFactoryConfig) o;
 
-            if (className != null ? !className.equals(that.className) : that.className != null) {
+            if (!Objects.equals(className, that.className)) {
                 return false;
             }
-            return timedExpiryPolicyFactoryConfig != null
-                    ? timedExpiryPolicyFactoryConfig.equals(that.timedExpiryPolicyFactoryConfig)
-                    : that.timedExpiryPolicyFactoryConfig == null;
+            return Objects.equals(timedExpiryPolicyFactoryConfig, that.timedExpiryPolicyFactoryConfig);
         }
 
         @Override
@@ -1188,7 +1187,7 @@ public class CacheSimpleConfig implements IdentifiedDataSerializable, NamedConfi
                 private static final int MAX_ID = ETERNAL.id;
                 private static final ExpiryPolicyType[] CACHED_VALUES = values();
 
-                private int id;
+                private final int id;
 
                 ExpiryPolicyType(int id) {
                     this.id = id;

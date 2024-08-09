@@ -20,6 +20,7 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.client.impl.clientside.ClientTestUtil;
 import com.hazelcast.client.impl.clientside.HazelcastClientInstanceImpl;
+import com.hazelcast.client.impl.connection.ClientConnection;
 import com.hazelcast.client.impl.connection.ClientConnectionManager;
 import com.hazelcast.client.impl.connection.tcp.RoutingMode;
 import com.hazelcast.client.properties.ClientProperty;
@@ -28,6 +29,7 @@ import com.hazelcast.client.test.TestHazelcastFactory;
 import com.hazelcast.client.util.ConfigRoutingUtil;
 import com.hazelcast.cluster.Address;
 import com.hazelcast.cluster.Member;
+import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.internal.nio.Connection;
@@ -51,8 +53,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.hazelcast.client.impl.connection.tcp.RoutingMode.SMART;
-import static com.hazelcast.client.impl.connection.tcp.RoutingMode.UNISOCKET;
+
+import static com.hazelcast.client.impl.connection.tcp.RoutingMode.ALL_MEMBERS;
+import static com.hazelcast.client.impl.connection.tcp.RoutingMode.SINGLE_MEMBER;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -66,10 +71,10 @@ public class TcpClientConnectionTest extends ClientTestSupport {
 
     @Parameterized.Parameters(name = "{index}: routingMode={0}")
     public static Iterable<?> parameters() {
-        return Arrays.asList(UNISOCKET, RoutingMode.SMART);
+        return Arrays.asList(SINGLE_MEMBER, RoutingMode.ALL_MEMBERS);
     }
 
-    private final TestHazelcastFactory hazelcastFactory = new TestHazelcastFactory();
+    protected final TestHazelcastFactory hazelcastFactory = new TestHazelcastFactory();
 
     @After
     public void cleanup() {
@@ -132,7 +137,7 @@ public class TcpClientConnectionTest extends ClientTestSupport {
 
         ClientConfig config = newClientConfig();
         config.setProperty(ClientProperty.SHUFFLE_MEMBER_LIST.getName(), "false");
-        config.getNetworkConfig().setSmartRouting(false);
+        config.getNetworkConfig().getClusterRoutingConfig().setRoutingMode(RoutingMode.SINGLE_MEMBER);
 
         Address address1 = server1.getCluster().getLocalMember().getAddress();
         Address address2 = server2.getCluster().getLocalMember().getAddress();
@@ -172,23 +177,23 @@ public class TcpClientConnectionTest extends ClientTestSupport {
         assertOpenEventually(reconnectListener.reconnectedLatch);
 
         connectionToServer.close(null, null);
-        assertEqualsEventually(() -> listener.connectionRemovedCount.get(), 1);
+        assertEqualsEventually(listener.connectionRemovedCount::get, 1);
         sleepMillis(100);
         assertEquals("connection removed should be called only once", 1, listener.connectionRemovedCount.get());
     }
 
-    private class CountingConnectionListener implements ConnectionListener {
+    private static class CountingConnectionListener implements ConnectionListener<ClientConnection> {
 
         final AtomicInteger connectionRemovedCount = new AtomicInteger();
         final AtomicInteger connectionAddedCount = new AtomicInteger();
 
         @Override
-        public void connectionAdded(Connection connection) {
+        public void connectionAdded(ClientConnection connection) {
             connectionAddedCount.incrementAndGet();
         }
 
         @Override
-        public void connectionRemoved(Connection connection) {
+        public void connectionRemoved(ClientConnection connection) {
             connectionRemovedCount.incrementAndGet();
         }
     }
@@ -204,10 +209,10 @@ public class TcpClientConnectionTest extends ClientTestSupport {
 
         assertTrueEventually(() -> assertEquals(2, client.getCluster().getMembers().size()));
 
-        final AtomicReference<Future> atomicReference = new AtomicReference<>();
+        final AtomicReference<Future<Object>> atomicReference = new AtomicReference<>();
         Thread thread = new Thread(() -> {
             Member secondMember = secondInstance.getCluster().getLocalMember();
-            Future future = executorService.submitToMember(new DummySerializableCallable(), secondMember);
+            Future<Object> future = executorService.submitToMember(new DummySerializableCallable(), secondMember);
             atomicReference.set(future);
         });
         thread.start();
@@ -220,7 +225,8 @@ public class TcpClientConnectionTest extends ClientTestSupport {
     }
 
     @Test
-    public void testAddingConnectionListenerTwice_shouldCauseEventDeliveredTwice() {
+    public void
+    testAddingConnectionListenerTwice_shouldCauseEventDeliveredTwice() {
         hazelcastFactory.newHazelcastInstance();
         ClientConfig clientConfig = newClientConfig();
         HazelcastInstance client = hazelcastFactory.newHazelcastClient(clientConfig);
@@ -237,7 +243,7 @@ public class TcpClientConnectionTest extends ClientTestSupport {
 
         assertTrueEventually(() -> {
             // non=smart ones will not connect to newly added server
-            int expectedConnectionCount = routingMode == SMART ? 2 : 0;
+            int expectedConnectionCount = routingMode == ALL_MEMBERS ? 2 : 0;
             assertEquals(expectedConnectionCount, listener.connectionAddedCount.get());
         });
     }
@@ -252,7 +258,7 @@ public class TcpClientConnectionTest extends ClientTestSupport {
         ClientConfig clientConfig = newClientConfig();
         HazelcastInstance client = hazelcastFactory.newHazelcastClient(clientConfig);
 
-        int expectedConnectionCount = routingMode == SMART ? memberCount : 1;
+        int expectedConnectionCount = routingMode == ALL_MEMBERS ? memberCount : 1;
         makeSureConnectedToServers(client, expectedConnectionCount);
     }
 
@@ -267,19 +273,89 @@ public class TcpClientConnectionTest extends ClientTestSupport {
         clientConfig.getConnectionStrategyConfig().setAsyncStart(true);
         HazelcastInstance client = hazelcastFactory.newHazelcastClient(clientConfig);
 
-        int expectedConnectionCount = routingMode == SMART ? memberCount : 1;
+        int expectedConnectionCount = routingMode == ALL_MEMBERS ? memberCount : 1;
         makeSureConnectedToServers(client, expectedConnectionCount);
     }
 
-    public static class DummySerializableCallable implements Callable, Serializable {
+    @Test
+    public void testAuthentication_when_clusterName_isSameAsClient_whenSkipClusterNameDefault() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer("Test", "Test", false);
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isSameAsClient_whenSkipClusterNameTrue() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer("Test", "Test", true);
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isNotSetInMemberOrClient_whenSkipClusterNameDefault() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer(null, null, false);
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isNotSetInMemberOrClient_whenSkipClusterNameTrue() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer(null, null, true);
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isNotSetOnMemberAndSetInClient_whenSkipClusterNameDefault() {
+        // if the client is able to connect, it's a fail
+        assertThatThrownBy(() -> createClientAndServer(null, "Test", false))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Unable to connect to any cluster.");
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isNotSetOnMemberAndSetInClient_whenSkipClusterNameTrue() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer(null, "Test", true);
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isDifferentToClient_whenSkipClusterNameDefault() {
+        // if the client is able to connect, it's a fail
+        assertThatThrownBy(() -> createClientAndServer("Dev", "Test", false))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Unable to connect to any cluster.");
+    }
+
+    @Test
+    public void testAuthentication_when_clusterName_isDifferentToClient_whenSkipClusterNameTrue() {
+        // if the client is able to connect, it's a pass
+        createClientAndServer("Dev", "Test", true);
+    }
+
+    private void createClientAndServer(String serverClusterName, String clientClusterName, boolean skipNameChecks) {
+        Config config = smallInstanceConfigWithoutJetAndMetrics();
+        if (serverClusterName != null) {
+            config.setClusterName(serverClusterName);
+        }
+        if (skipNameChecks) {
+            config.setProperty("hazelcast.client.internal.skip.cluster.namecheck.during.connection", "true");
+        }
+        hazelcastFactory.newHazelcastInstance(config);
+
+        ClientConfig clientConfig = new ClientConfig();
+        if (clientClusterName != null) {
+            clientConfig.setClusterName(clientClusterName);
+        }
+        clientConfig.getConnectionStrategyConfig().getConnectionRetryConfig().setClusterConnectTimeoutMillis(0);
+        hazelcastFactory.newHazelcastClient(clientConfig);
+    }
+
+    private static class DummySerializableCallable implements Callable<Object>, Serializable {
 
         @Override
-        public Object call() throws Exception {
+        public Object call() {
             return null;
         }
     }
 
-    private ClientConfig newClientConfig() {
+    protected ClientConfig newClientConfig() {
         ClientConfig clientConfig = ConfigRoutingUtil.newClientConfig(routingMode);
         clientConfig.getConnectionStrategyConfig().getConnectionRetryConfig().setClusterConnectTimeoutMillis(Long.MAX_VALUE);
         return clientConfig;

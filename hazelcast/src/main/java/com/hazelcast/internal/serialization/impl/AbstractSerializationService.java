@@ -191,7 +191,6 @@ public abstract class AbstractSerializationService implements InternalSerializat
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
     public final <B extends Data> B toData(Object obj, PartitioningStrategy strategy) {
         if (obj == null) {
             return null;
@@ -418,10 +417,12 @@ public abstract class AbstractSerializationService implements InternalSerializat
         return inputOutputFactory.createOutput(outputBufferSize, this);
     }
 
+    @Override
     public final ClassLoader getClassLoader() {
         return classLoader;
     }
 
+    @Override
     public final ManagedContext getManagedContext() {
         return managedContext;
     }
@@ -436,6 +437,7 @@ public abstract class AbstractSerializationService implements InternalSerializat
         return version;
     }
 
+    @Override
     public void dispose() {
         active = false;
         for (SerializerAdapter serializer : typeMap.values()) {
@@ -616,6 +618,7 @@ public abstract class AbstractSerializationService implements InternalSerializat
         return includeSchema ? compactWithSchemaSerializerAdapter : compactSerializerAdapter;
     }
 
+    @Override
     public boolean isCompactSerializable(Object object) {
         return serializerFor(object, false) == compactSerializerAdapter;
     }
@@ -724,7 +727,6 @@ public abstract class AbstractSerializationService implements InternalSerializat
         }
     }
 
-    @SuppressWarnings("rawtypes")
     public abstract static class Builder<T extends Builder<T>> {
         private InputOutputFactory inputOutputFactory;
         private byte version;

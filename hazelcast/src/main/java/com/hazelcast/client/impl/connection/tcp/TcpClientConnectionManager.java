@@ -33,6 +33,7 @@ import com.hazelcast.client.impl.clientside.ClientLoggingService;
 import com.hazelcast.client.impl.clientside.ClusterDiscoveryService;
 import com.hazelcast.client.impl.clientside.HazelcastClientInstanceImpl;
 import com.hazelcast.client.impl.clientside.LifecycleServiceImpl;
+import com.hazelcast.client.impl.clientside.SubsetMembersView;
 import com.hazelcast.client.impl.connection.AddressProvider;
 import com.hazelcast.client.impl.connection.Addresses;
 import com.hazelcast.client.impl.connection.ClientConnection;
@@ -48,7 +49,6 @@ import com.hazelcast.client.impl.spi.impl.ClientExecutionServiceImpl;
 import com.hazelcast.client.impl.spi.impl.ClientInvocation;
 import com.hazelcast.client.impl.spi.impl.ClientInvocationFuture;
 import com.hazelcast.client.impl.spi.impl.ClientPartitionServiceImpl;
-import com.hazelcast.client.util.ClientConnectivityLogger;
 import com.hazelcast.cluster.Address;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.cluster.MembershipEvent;
@@ -140,10 +140,10 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
     /**
      * A private property to let users control the reconnection behavior of the client.
      * <p>
-     * When enabled, the client will skip trying to connect to members in the last known
-     * member list during reconnection attempts.
+     * When enabled (true), the client will skip trying to connect to members in the last known
+     * member list during reconnection attempts. Default is false.
      * <p>
-     * This property might be handy for users who are using the client with unisocket
+     * This property might be handy for users who are using the client with SINGLE_MEMBER routing
      * mode and exposing their multi-member cluster via a single load balancer or node port
      * in Kubernetes. In that scenario, the client would normally try to reconnect to the
      * members in the last known member list first after disconnection, but that would fail
@@ -182,7 +182,6 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
     private final boolean shuffleMemberList;
     private final WaitStrategy waitStrategy;
     private final ClusterDiscoveryService clusterDiscoveryService;
-    private final ClientConnectivityLogger connectivityLogger;
 
     private final boolean asyncStart;
     private final ReconnectMode reconnectMode;
@@ -272,24 +271,17 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
         this.connectionProcessListenerRunner = new ClientConnectionProcessListenerRegistry(client);
         this.skipMemberListDuringReconnection = properties.getBoolean(SKIP_MEMBER_LIST_DURING_RECONNECTION);
         this.clientClusterService = client.getClientClusterService();
-        this.connectivityLogger = new ClientConnectivityLogger(loggingService, executor, properties);
     }
 
     private static RoutingMode decideRoutingMode(ClientConfig config) {
-        if (config.getTpcConfig().isEnabled()) {
-            return RoutingMode.SMART;
-        }
-
         ClientNetworkConfig networkConfig = config.getNetworkConfig();
-        if (networkConfig.isSmartRouting()) {
-            return RoutingMode.SMART;
-        }
+        RoutingMode mode = networkConfig.getClusterRoutingConfig().getRoutingMode();
 
-        if (networkConfig.getSubsetRoutingConfig().isEnabled()) {
-            return RoutingMode.SUBSET;
+        if (config.getTpcConfig().isEnabled() && mode != RoutingMode.ALL_MEMBERS) {
+            // This should be impossible due to validation in HazelcastClientInstanceImpl, but to catch just in case...
+            throw new IllegalStateException("TPC is enabled but our RoutingMode is " + mode + " instead of ALL_MEMBERS!");
         }
-
-        return RoutingMode.UNISOCKET;
+        return mode;
     }
 
     private int initConnectionTimeoutMillis() {
@@ -349,7 +341,7 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
             return configuredThreadCount;
         }
 
-        if (routingMode == RoutingMode.UNISOCKET) {
+        if (routingMode == RoutingMode.SINGLE_MEMBER) {
             return 1;
         }
 
@@ -390,7 +382,7 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
     }
 
     public void tryConnectToAllClusterMembers(boolean sync) {
-        if (routingMode == RoutingMode.UNISOCKET) {
+        if (routingMode == RoutingMode.SINGLE_MEMBER) {
             return;
         }
 
@@ -907,10 +899,8 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
         Address endpoint = connection.getRemoteAddress();
         UUID memberUuid = connection.getRemoteUuid();
         if (endpoint == null) {
-            if (logger.isFinestEnabled()) {
-                logger.finest("Destroying " + connection + ", but it has end-point set to null "
-                        + "-> not removing it from a connection map");
-            }
+            logger.finest("Destroying %s, but it has end-point set to null -> not removing it from a connection map",
+                    connection);
             return;
         }
 
@@ -928,10 +918,9 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                 }
 
                 fireConnectionEvent(connection, false);
-                submitConnectivityLoggingTask();
-            } else if (logger.isFinestEnabled()) {
-                logger.finest("Destroying a connection, but there is no mapping " + endpoint + ":" + memberUuid
-                        + " -> " + connection + " in the connection map.");
+            } else {
+                logger.finest("Destroying a connection, but there is no mapping %s:%s -> %s in the connection map.", endpoint,
+                        memberUuid, connection);
             }
         }
     }
@@ -980,7 +969,7 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
     @Override
     public ClientConnection getRandomConnection() {
         // 1. Try getting the connection from the load balancer, if the client is not unisocket
-        if (routingMode != RoutingMode.UNISOCKET) {
+        if (routingMode != RoutingMode.SINGLE_MEMBER) {
             Member member = loadBalancer.next();
 
             // Failed to get a member
@@ -999,7 +988,7 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
 
     @Override
     public ClientConnection getConnectionForSql() {
-        if (routingMode != RoutingMode.UNISOCKET) {
+        if (routingMode != RoutingMode.SINGLE_MEMBER) {
             // There might be a race - the chosen member might be just connected or disconnected - try a
             // couple of times, the memberOfLargerSameVersionGroup returns a random connection,
             // we might be lucky...
@@ -1149,7 +1138,6 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                     + ", local address: " + connection.getLocalSocketAddress());
 
             fireConnectionEvent(connection, true);
-            submitConnectivityLoggingTask();
         }
 
         // It could happen that this connection is already closed and
@@ -1177,12 +1165,17 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
 
         if (response.isKeyValuePairsExists()) {
             Map<String, String> keyValuePairs = Collections.unmodifiableMap(response.getKeyValuePairs());
+            // Pass along KV pairs for MULTI_MEMBER routing if required
             client.getClientClusterService()
                     .updateOnAuth(connection.getClusterUuid(), connection.getRemoteUuid(), keyValuePairs);
+
+            // Pass CP leadership data to our tracking service
+            client.getCPGroupViewService().initializeKnownLeaders(connection.getRemoteUuid(), connection.getRemoteAddress(),
+                    keyValuePairs);
         } else {
             // If there are no key-value pairs, we have connected to a member that is older than 5_5
-            // this is unsupported for clients operating with subset routing mode.
-            if (routingMode.equals(RoutingMode.SUBSET)) {
+            // this is unsupported for clients operating with MULTI_MEMBER routing mode.
+            if (routingMode.equals(RoutingMode.MULTI_MEMBER)) {
                 throw new UnsupportedClusterVersionException(ROUTING_MODE_NOT_SUPPORTED_MESSAGE);
             }
         }
@@ -1293,10 +1286,11 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
         Credentials credentials = currentContext.getCredentialsFactory().newCredentials(toAddress);
         String clusterName = currentContext.getClusterName();
         currentCredentials = credentials;
+        boolean cpDirectToLeader = client.getCPGroupViewService().isDirectToLeaderEnabled();
         byte routingModeByte = (byte) client.getConnectionManager().getRoutingMode().ordinal();
         if (credentials instanceof PasswordCredentials passwordCredentials) {
             return encodePasswordCredentialsRequest(clusterName, passwordCredentials,
-                    ss.getVersion(), clientVersion, routingModeByte);
+                    ss.getVersion(), clientVersion, routingModeByte, cpDirectToLeader);
         } else {
             byte[] secretBytes;
             if (credentials instanceof TokenCredentials tokenCredentials) {
@@ -1305,26 +1299,29 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                 secretBytes = ss.toDataWithSchema(credentials).toByteArray();
             }
 
-            return encodeCustomCredentialsRequest(clusterName, secretBytes, ss.getVersion(), clientVersion, routingModeByte);
+            return encodeCustomCredentialsRequest(clusterName, secretBytes, ss.getVersion(), clientVersion, routingModeByte,
+                    cpDirectToLeader);
         }
     }
 
     private ClientMessage encodePasswordCredentialsRequest(String clusterName,
                                                            PasswordCredentials credentials,
                                                            byte serializationVersion,
-                                                           String clientVersion, byte routingMode) {
+                                                           String clientVersion, byte routingMode,
+                                                           boolean cpDirectToLeader) {
         return ClientAuthenticationCodec.encodeRequest(clusterName, credentials.getName(),
                 credentials.getPassword(), clientUuid, connectionType, serializationVersion,
-                clientVersion, client.getName(), labels, routingMode);
+                clientVersion, client.getName(), labels, routingMode, cpDirectToLeader);
     }
 
     private ClientMessage encodeCustomCredentialsRequest(String clusterName,
                                                          byte[] secretBytes,
                                                          byte serializationVersion,
                                                          String clientVersion,
-                                                         byte routingMode) {
+                                                         byte routingMode,
+                                                         boolean cpDirectToLeader) {
         return ClientAuthenticationCustomCodec.encodeRequest(clusterName, secretBytes, clientUuid,
-                connectionType, serializationVersion, clientVersion, client.getName(), labels, routingMode);
+                connectionType, serializationVersion, clientVersion, client.getName(), labels, routingMode, cpDirectToLeader);
     }
 
     protected void checkClientActive() {
@@ -1500,54 +1497,56 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                 });
             }
 
-            if (getRoutingMode() == RoutingMode.SUBSET) {
+            if (getRoutingMode() == RoutingMode.MULTI_MEMBER) {
                 tryCloseConnectionsToMembersNotInSubset();
             }
         }
+    }
 
-        private void tryCloseConnectionsToMembersNotInSubset() {
-            Collection<Member> effectiveMemberList = client.getClientClusterService().getEffectiveMemberList();
-            if (!haveAllEffectiveMembersConnected(effectiveMemberList)) {
-                return;
-            }
-
-            // remove connections to members not part of subset
-            for (Member member : client.getClientClusterService().getMemberList()) {
-                if (effectiveMemberList.contains(member)) {
-                    // the member is part of the subset
-                    continue;
-                }
-
-                TcpClientConnection candidateForClosure = activeConnections.get(member.getUuid());
-                if (candidateForClosure == null) {
-                    // no active connection to the member
-                    continue;
-                }
-
-                if (client.getInvocationService().isConnectionInUse(candidateForClosure)) {
-                    // connection is still in use despite the
-                    // member is not being part of the subset
-                    continue;
-                }
-
-                // connection can be closed
-                candidateForClosure.close("Connection is closed because it is not for a subset member", null);
-            }
+    private void tryCloseConnectionsToMembersNotInSubset() {
+        SubsetMembersView subsetMembersView = client.getClientClusterService().getSubsetMembers().getSubsetMembersView();
+        Set<UUID> subsetMembers = subsetMembersView == null ? Collections.emptySet() : subsetMembersView.members();
+        if (!haveAllSubsetMembersConnected(subsetMembers)) {
+            return;
         }
 
-        private boolean haveAllEffectiveMembersConnected(Collection<Member> effectiveMemberList) {
-            if (effectiveMemberList.isEmpty()) {
+        // remove connections to members not part of subset
+        for (Member member : client.getClientClusterService().getMemberList()) {
+            if (subsetMembers.contains(member.getUuid())) {
+                // the member is part of the subset
+                continue;
+            }
+
+            TcpClientConnection candidateForClosure = activeConnections.get(member.getUuid());
+            if (candidateForClosure == null) {
+                // no active connection to the member
+                continue;
+            }
+
+            if (client.getInvocationService().isConnectionInUse(candidateForClosure)) {
+                // connection is still in use despite the
+                // member is not being part of the subset
+                continue;
+            }
+
+            // connection can be closed
+            candidateForClosure.close("Connection is closed because it is not relevant for the current MULTI_MEMBER "
+                    + "configuration", null);
+        }
+    }
+
+    private boolean haveAllSubsetMembersConnected(Collection<UUID> subsetMembers) {
+        if (subsetMembers.isEmpty()) {
+            return false;
+        }
+
+        for (UUID member : subsetMembers) {
+            if (!activeConnections.containsKey(member)) {
                 return false;
             }
-
-            for (Member member : effectiveMemberList) {
-                if (!activeConnections.containsKey(member.getUuid())) {
-                    return false;
-                }
-            }
-
-            return true;
         }
+
+        return true;
     }
 
     @Override
@@ -1564,10 +1563,5 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                     new TargetDisconnectedException("The client has closed the connection to this member,"
                             + " after receiving a member left event from the cluster. " + connection));
         }
-    }
-
-    private void submitConnectivityLoggingTask() {
-        connectivityLogger.submitLoggingTask(clientClusterService.getEffectiveMemberList(),
-                clientClusterService.getMemberList());
     }
 }

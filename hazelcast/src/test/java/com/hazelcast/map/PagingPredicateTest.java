@@ -109,7 +109,7 @@ public class PagingPredicateTest extends HazelcastTestSupport {
 
         int value = 9;
         Set<Integer> whole = new HashSet<>(size);
-        while (keySet.size() > 0) {
+        while (!keySet.isEmpty()) {
             for (Integer integer : keySet) {
                 assertTrue(integer > value);
                 value = integer;
@@ -122,7 +122,7 @@ public class PagingPredicateTest extends HazelcastTestSupport {
         PagingPredicate<Integer, Integer> predicate2 = Predicates.pagingPredicate(pageSize);
         value = 9;
         keySet = map2.localKeySet(predicate2);
-        while (keySet.size() > 0) {
+        while (!keySet.isEmpty()) {
             for (Integer integer : keySet) {
                 assertTrue(integer > value);
                 value = integer;
@@ -158,7 +158,7 @@ public class PagingPredicateTest extends HazelcastTestSupport {
         PagingPredicate<Integer, Integer> predicate = Predicates.pagingPredicate(pageSize);
 
         Collection<Integer> values = map.values(predicate);
-        while (values.size() > 0) {
+        while (!values.isEmpty()) {
             assertEquals(pageSize, values.size());
             set.addAll(values);
 
@@ -780,6 +780,7 @@ public class PagingPredicateTest extends HazelcastTestSupport {
     }
 
     private static class EmployeeIdComparator implements Comparator<Employee> {
+        @Override
         public int compare(Employee e1, Employee e2) {
             return e1.getId() - e2.getId();
         }

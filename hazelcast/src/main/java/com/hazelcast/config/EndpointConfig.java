@@ -34,7 +34,7 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
 /**
  * Endpoint configuration that defines communication/networking properties common to both incoming/outgoing connections
  * e.g.
- *
+ * <p>
  * - Encryption / Security
  * - Hazelcast protocol type
  *
@@ -117,10 +117,12 @@ public class EndpointConfig implements NamedConfig {
         return protocolType;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public EndpointConfig setName(String name) {
         this.name = name;
         return this;

@@ -139,6 +139,7 @@ public abstract class SplitBrainTestSupport extends HazelcastTestSupport {
                 .setProperty(ClusterProperty.MERGE_NEXT_RUN_DELAY_SECONDS.getName(), "5");
     }
 
+    @Override
     protected final Config getConfig() {
         return super.getConfig();
     }
@@ -564,10 +565,10 @@ public abstract class SplitBrainTestSupport extends HazelcastTestSupport {
 
         @Override
         public Object merge(T mergingValue, T existingValue) {
-            if (mergingValue.getValue() instanceof Integer) {
+            if (mergingValue.getDeserializedValue() instanceof Integer) {
                 return mergingValue.getRawValue();
             }
-            if (existingValue != null && existingValue.getValue() instanceof Integer) {
+            if (existingValue != null && existingValue.getDeserializedValue() instanceof Integer) {
                 return existingValue.getRawValue();
             }
             return null;
@@ -594,13 +595,13 @@ public abstract class SplitBrainTestSupport extends HazelcastTestSupport {
         public Collection<Object> merge(MergingValue<Collection<Object>> mergingValue,
                                         MergingValue<Collection<Object>> existingValue) {
             Collection<Object> result = new ArrayList<>();
-            for (Object value : mergingValue.getValue()) {
+            for (Object value : mergingValue.getDeserializedValue()) {
                 if (value instanceof Integer) {
                     result.add(value);
                 }
             }
             if (existingValue != null) {
-                for (Object value : existingValue.getValue()) {
+                for (Object value : existingValue.getDeserializedValue()) {
                     if (value instanceof Integer) {
                         result.add(value);
                     }

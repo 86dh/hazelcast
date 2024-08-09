@@ -30,8 +30,9 @@ import java.io.IOException;
 @RunWith(HazelcastParallelClassRunner.class)
 public class StringJsonSchemaCreateTest extends AbstractJsonSchemaCreateTest {
 
-    private JsonFactory factory = new JsonFactory();
+    private final JsonFactory factory = new JsonFactory();
 
+    @Override
     protected JsonParser createParserFromString(String jsonString) throws IOException {
         return factory.createParser(jsonString);
     }

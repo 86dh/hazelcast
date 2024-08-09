@@ -21,7 +21,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.hazelcast.com/schema/spring
-        http://www.hazelcast.com/schema/spring/hazelcast-spring-5.5.xsd">
+        http://www.hazelcast.com/schema/spring/hazelcast-spring-6.0.xsd">
 
     <hz:hazelcast id="instance" lazy-init="true" scope="singleton">
         <hz:config>
@@ -43,8 +43,8 @@
         <hz:spring-aware/>
         <hz:cluster-name>${cluster.name}</hz:cluster-name>
         <hz:network connection-timeout="1000"
-                    redo-operation="true"
-                    smart-routing="true">
+                    redo-operation="true">
+            <hz:cluster-routing mode="ALL_MEMBERS"/>
 
             <hz:member>127.0.0.1:5750</hz:member>
             <hz:member>127.0.0.1:5751</hz:member>

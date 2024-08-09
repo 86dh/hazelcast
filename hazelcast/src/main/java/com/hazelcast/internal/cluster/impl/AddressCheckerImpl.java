@@ -17,7 +17,6 @@
 package com.hazelcast.internal.cluster.impl;
 
 import static com.hazelcast.internal.util.AddressUtil.matchAnyInterface;
-import static java.lang.String.format;
 
 import java.util.Set;
 
@@ -41,6 +40,7 @@ public final class AddressCheckerImpl implements AddressChecker {
         this.logger = logger;
     }
 
+    @Override
     public boolean isTrusted(Address address) {
         if (address == null) {
             return false;
@@ -54,8 +54,8 @@ public final class AddressCheckerImpl implements AddressChecker {
             return true;
         } else {
             if (logger.isFineEnabled()) {
-                logger.fine(format(
-                        "Address %s doesn't match any trusted interface", host));
+                logger.fine(
+                        "Address %s doesn't match any trusted interface", host);
             }
             return false;
         }

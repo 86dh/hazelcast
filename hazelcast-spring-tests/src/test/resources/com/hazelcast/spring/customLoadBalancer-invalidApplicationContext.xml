@@ -21,10 +21,12 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.hazelcast.com/schema/spring
-        http://www.hazelcast.com/schema/spring/hazelcast-spring-5.5.xsd">
+        http://www.hazelcast.com/schema/spring/hazelcast-spring-6.0.xsd">
 
     <hz:client id="client">
-        <hz:network connection-timeout="1000" smart-routing="false">
+        <hz:network connection-timeout="1000">
+            <hz:cluster-routing mode="SINGLE_MEMBER"/>
+
             <hz:member>127.0.0.1:5700</hz:member>
             <hz:member>127.0.0.1:5701</hz:member>
         </hz:network>

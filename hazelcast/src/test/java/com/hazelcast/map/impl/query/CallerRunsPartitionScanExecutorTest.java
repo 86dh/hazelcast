@@ -24,15 +24,15 @@ import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.annotation.ParallelJVMTest;
 import com.hazelcast.test.annotation.QuickTest;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import java.util.Collection;
+import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,14 +44,11 @@ import static org.mockito.Mockito.mock;
 @Category({QuickTest.class, ParallelJVMTest.class})
 public class CallerRunsPartitionScanExecutorTest {
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
-
     @Test
     public void execute_success() {
         PartitionScanRunner runner = mock(PartitionScanRunner.class);
         CallerRunsPartitionScanExecutor executor = new CallerRunsPartitionScanExecutor(runner);
-        Predicate predicate = Predicates.equal("attribute", 1);
+        Predicate<Object, Object> predicate = Predicates.equal("attribute", 1);
         QueryResult queryResult = new QueryResult(IterationType.ENTRY, null, null, Long.MAX_VALUE, false);
 
         executor.execute("Map", predicate, asList(1, 2, 3), queryResult);
@@ -63,25 +60,27 @@ public class CallerRunsPartitionScanExecutorTest {
     public void execute_fail() {
         PartitionScanRunner runner = mock(PartitionScanRunner.class);
         CallerRunsPartitionScanExecutor executor = new CallerRunsPartitionScanExecutor(runner);
-        Predicate predicate = Predicates.equal("attribute", 1);
+        Predicate<Object, Object> predicate = Predicates.equal("attribute", 1);
         QueryResult queryResult = new QueryResult(IterationType.ENTRY, null, null, Long.MAX_VALUE, false);
 
         doThrow(new QueryException()).when(runner).run(anyString(), eq(predicate), anyInt(), eq(queryResult));
 
-        expected.expect(QueryException.class);
-        executor.execute("Map", predicate, asList(1, 2, 3), queryResult);
+        List<Integer> list = asList(1, 2, 3);
+        assertThatThrownBy(() -> executor.execute("Map", predicate, list, queryResult))
+                .isInstanceOf(QueryException.class);
     }
 
     @Test
     public void execute_fail_retryable() {
         PartitionScanRunner runner = mock(PartitionScanRunner.class);
         CallerRunsPartitionScanExecutor executor = new CallerRunsPartitionScanExecutor(runner);
-        Predicate predicate = Predicates.equal("attribute", 1);
+        Predicate<Object, Object> predicate = Predicates.equal("attribute", 1);
         QueryResult queryResult = new QueryResult(IterationType.ENTRY, null, null, Long.MAX_VALUE, false);
 
         doThrow(new RetryableHazelcastException()).when(runner).run(anyString(), eq(predicate), anyInt(), eq(queryResult));
 
-        expected.expect(RetryableHazelcastException.class);
-        executor.execute("Map", predicate, asList(1, 2, 3), queryResult);
+        List<Integer> list = asList(1, 2, 3);
+        assertThatThrownBy(() -> executor.execute("Map", predicate, list, queryResult))
+                .isInstanceOf(RetryableHazelcastException.class);
     }
 }

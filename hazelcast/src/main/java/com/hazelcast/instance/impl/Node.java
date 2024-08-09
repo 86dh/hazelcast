@@ -83,6 +83,7 @@ import com.hazelcast.internal.services.GracefulShutdownAwareService;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import com.hazelcast.internal.util.Clock;
 import com.hazelcast.internal.util.FutureUtil;
+import com.hazelcast.jet.impl.util.ReflectionUtils;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
@@ -279,7 +280,7 @@ public class Node {
             localAddressRegistry = new LocalAddressRegistry(this, addressPicker);
             server = nodeContext.createServer(this, serverSocketRegistry, localAddressRegistry);
             healthMonitor = new HealthMonitor(this);
-            clientEngine = hasClientServerSocket() ? new ClientEngineImpl(this) : new NoOpClientEngine();
+            clientEngine = hasClientServerSocket() ? nodeExtension.createClientEngine() : new NoOpClientEngine();
             JoinConfig joinConfig = getActiveMemberNetworkConfig(this.config).getJoin();
             if (properties.getBoolean(ClusterProperty.PERSISTENCE_AUTO_CLUSTER_STATE)
                     && config.getPersistenceConfig().isEnabled()) {
@@ -559,9 +560,7 @@ public class Node {
     @SuppressWarnings("checkstyle:npathcomplexity")
     public void shutdown(final boolean terminate) {
         long start = Clock.currentTimeMillis();
-        if (logger.isFinestEnabled()) {
-            logger.finest("We are being asked to shutdown when state = " + state);
-        }
+        logger.finest("We are being asked to shutdown when state = %s", state);
         if (nodeExtension != null) {
             nodeExtension.beforeShutdown(terminate);
         }
@@ -613,7 +612,7 @@ public class Node {
         Collection<Future> futures = new ArrayList<>(services.size());
 
         for (final GracefulShutdownAwareService service : services) {
-            Future future = executor.submit(new Runnable() {
+            Future<?> future = executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -766,7 +765,7 @@ public class Node {
         return loggingService.getLogger(name);
     }
 
-    public ILogger getLogger(Class clazz) {
+    public ILogger getLogger(Class<?> clazz) {
         return loggingService.getLogger(clazz);
     }
 
@@ -930,7 +929,7 @@ public class Node {
     public void join() {
         if (clusterService.isJoined()) {
             if (logger.isFinestEnabled()) {
-                logger.finest("Calling join on already joined node. ", new Exception("stacktrace"));
+                logger.finest("Calling join on already joined node. ", ReflectionUtils.getStackTrace(Thread.currentThread()));
             } else {
                 logger.warning("Calling join on already joined node. ");
             }

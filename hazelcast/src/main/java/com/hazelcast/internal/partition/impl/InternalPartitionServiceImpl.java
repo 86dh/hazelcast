@@ -355,7 +355,7 @@ public class InternalPartitionServiceImpl implements InternalPartitionService,
     @Probe(name = PARTITIONS_METRIC_PARTITION_SERVICE_MAX_BACKUP_COUNT)
     @Override
     public int getMaxAllowedBackupCount() {
-        return max(min(getMemberGroupsSize() - 1, InternalPartition.MAX_BACKUP_COUNT), 0);
+        return max(min(getMemberGroupsSize() - 1, IPartition.MAX_BACKUP_COUNT), 0);
     }
 
     public void updateMemberGroupSize() {
@@ -1305,10 +1305,12 @@ public class InternalPartitionServiceImpl implements InternalPartitionService,
         return replicaManager.getScheduledReplicaSyncRequests();
     }
 
+    @Override
     public PartitionStateManager getPartitionStateManager() {
         return partitionStateManager;
     }
 
+    @Override
     public MigrationManager getMigrationManager() {
         return migrationManager;
     }
@@ -1364,6 +1366,7 @@ public class InternalPartitionServiceImpl implements InternalPartitionService,
         }
     }
 
+    @Override
     public PartitionTableView getLeftMemberSnapshot(UUID uuid) {
         return partitionStateManager.getSnapshot(uuid);
     }
@@ -1378,6 +1381,7 @@ public class InternalPartitionServiceImpl implements InternalPartitionService,
      * This method should be used instead of {@code node.isMaster()}
      * when the logic relies on being master.
      */
+    @Override
     public boolean isLocalMemberMaster() {
         return isMemberMaster(node.getThisAddress());
     }
@@ -1476,6 +1480,7 @@ public class InternalPartitionServiceImpl implements InternalPartitionService,
 
         private boolean initialized = partitionStateManager.isInitialized();
 
+        @Override
         public void run() {
             ClusterState clusterState = node.getClusterService().getClusterState();
             if (!clusterState.isMigrationAllowed() && !clusterState.isPartitionPromotionAllowed()) {

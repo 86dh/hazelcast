@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  * Describes a state of NioThread (im-)balance.
- *
+ * <p>
  * It's used by {@link MigrationStrategy} to decide whether and what
  * {@link NioPipeline} should be migrated.
  */
@@ -50,7 +50,6 @@ class LoadImbalance {
     }
 
     /**
-     * @param owner
      * @return A set of Pipelines owned by the owner
      */
     Set<MigratablePipeline> getPipelinesOwnedBy(NioThread owner) {
@@ -58,7 +57,6 @@ class LoadImbalance {
     }
 
     /**
-     * @param pipeline
      * @return load recorded by the pipeline
      */
     long getLoad(MigratablePipeline pipeline) {

@@ -176,12 +176,10 @@ public class DefaultDiscoveryService implements DiscoveryService {
                 }
             }
             return discoveryStrategies;
+        } catch (ValidationException e) {
+            throw new InvalidConfigurationException("Invalid configuration", e);
         } catch (Exception e) {
-            if (e instanceof ValidationException) {
-                throw new InvalidConfigurationException("Invalid configuration", e);
-            } else {
-                throw new RuntimeException("Failed to configure discovery strategies", e);
-            }
+            throw new RuntimeException("Failed to configure discovery strategies", e);
         }
     }
 
@@ -235,8 +233,8 @@ public class DefaultDiscoveryService implements DiscoveryService {
                         highestPriorityFactory = factory;
                     }
                 } else {
-                    logger.fine(String.format("Discovery Factory '%s' is not auto-applicable to the current runtime environment",
-                            factory.getClass()));
+                    logger.fine("Discovery Factory '%s' is not auto-applicable to the current runtime environment",
+                            factory.getClass());
                 }
             } catch (Exception e) {
                 // exception in auto-detection should not prevent Hazelcast from starting

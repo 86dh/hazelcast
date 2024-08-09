@@ -48,9 +48,8 @@ public final class ConcurrentItemCounter<T> {
     }
 
     /**
-     * Get current counter for an item item
+     * Get current counter for an item
      *
-     * @param item
      * @return current state of a counter for item
      */
     public long get(T item) {
@@ -61,7 +60,7 @@ public final class ConcurrentItemCounter<T> {
     /**
      * Set counter of item to value
      *
-     * @param item to set set the value for
+     * @param item to set the value for
      * @param value a new value
      */
     public void set(T item, long value) {
@@ -70,8 +69,6 @@ public final class ConcurrentItemCounter<T> {
 
     /**
      * Increases the count by one for the given item.
-     *
-     * @param item
      */
     public void inc(T item) {
         add(item, 1);
@@ -79,9 +76,6 @@ public final class ConcurrentItemCounter<T> {
 
     /**
      * Add delta to the item
-     *
-     * @param item
-     * @param delta
      */
     public void add(T item, long delta) {
         getItemCounter(item).addAndGet(delta);

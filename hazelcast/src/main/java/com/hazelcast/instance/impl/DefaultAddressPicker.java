@@ -203,7 +203,7 @@ class DefaultAddressPicker
         }
 
         if (logger.isFineEnabled()) {
-            logger.fine("Prefer IPv4 stack is " + preferIPv4Stack() + ", prefer IPv6 addresses is " + preferIPv6Addresses());
+            logger.fine("Prefer IPv4 stack is %s, prefer IPv6 addresses is %s", preferIPv4Stack(), preferIPv6Addresses());
         }
 
         if (!interfaces.isEmpty()) {
@@ -228,9 +228,9 @@ class DefaultAddressPicker
         File file = config.getConfigurationFile();
         String configSource = file != null && file.exists() && file.isFile()
                 ? "the " + file.getName() + " config file." : "the member configuration.";
-        String msg = "Hazelcast CANNOT start on this node. No matching network interface found.\n"
-                + "Interface matching must be either disabled or updated in " + configSource;
-        return msg;
+        return """
+               Hazelcast CANNOT start on this node. No matching network interface found.
+               Interface matching must be either disabled or updated in %s""".formatted(configSource);
     }
 
     private List<InterfaceDefinition> getInterfaces() {

@@ -53,6 +53,7 @@ import static com.hazelcast.spi.impl.AbstractInvocationFuture.wrapOrPeel;
 @SuppressWarnings("checkstyle:methodcount")
 public class InternalCompletableFuture<V> extends CompletableFuture<V> {
 
+    @Override
     public Executor defaultExecutor() {
         return ConcurrencyUtil.getDefaultAsyncExecutor();
     }
@@ -329,7 +330,6 @@ public class InternalCompletableFuture<V> extends CompletableFuture<V> {
 
     /**
      *
-     * @param future
      * @return  a {@link BiConsumer} to be used with {@link CompletableFuture#whenComplete(BiConsumer)} and variants
      *          that completes the {@code future} given as argument normally or exceptionally, depending on whether
      *          {@code Throwable} argument is {@code null}

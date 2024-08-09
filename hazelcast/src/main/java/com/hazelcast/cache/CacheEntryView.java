@@ -31,6 +31,7 @@ public interface CacheEntryView<K, V> extends EvictableEntryView<K, V> {
      *
      * @return the key of the cache entry
      */
+    @Override
     K getKey();
 
     /**
@@ -38,6 +39,7 @@ public interface CacheEntryView<K, V> extends EvictableEntryView<K, V> {
      *
      * @return the value of the cache entry
      */
+    @Override
     V getValue();
 
     /**
@@ -52,13 +54,15 @@ public interface CacheEntryView<K, V> extends EvictableEntryView<K, V> {
      *
      * @return the last access time in milliseconds of the cache entry
      */
+    @Override
     long getLastAccessTime();
 
     /**
-     * Gets the count of how many time this cache entry has been accessed.
+     * Gets the number of times this cache entry has been accessed.
      *
-     * @return the count of how many time this cache entry has been accessed
+     * @return the number of times this cache entry has been accessed.
      */
+    @Override
     long getHits();
 
     /**

@@ -78,6 +78,7 @@ public interface LocalMapStats extends LocalInstanceStats {
      *
      * @return creation time of this map on this member.
      */
+    @Override
     long getCreationTime();
 
     /**
@@ -162,6 +163,20 @@ public interface LocalMapStats extends LocalInstanceStats {
      * @return number of remove operations
      */
     long getRemoveOperationCount();
+
+    /**
+     * Returns the number of <code>Map#values</code> calls
+     *
+     * @return number of <code>Map#values</code> calls
+     */
+    long getValuesCallsCount();
+
+    /**
+     * Returns the number of <code>Map#entrySet</code> calls
+     *
+     * @return the number of <code>Map#entrySet</code> calls
+     */
+    long getEntrySetCallsCount();
 
     /**
      * Returns the total latency of put operations. To get the average latency, divide by the number of puts

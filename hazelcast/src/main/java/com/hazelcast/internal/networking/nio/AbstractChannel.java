@@ -57,9 +57,8 @@ public abstract class AbstractChannel implements Channel {
     protected final SocketChannel socketChannel;
     protected final ILogger logger;
 
-    private final ConcurrentMap<?, ?> attributeMap = new ConcurrentHashMap<Object, Object>();
-    private final Set<ChannelCloseListener> closeListeners
-            = newSetFromMap(new ConcurrentHashMap<ChannelCloseListener, Boolean>());
+    private final ConcurrentMap<?, ?> attributeMap = new ConcurrentHashMap<>();
+    private final Set<ChannelCloseListener> closeListeners = newSetFromMap(new ConcurrentHashMap<>());
     private final boolean clientMode;
     @SuppressWarnings("FieldCanBeLocal")
     private volatile SocketAddress remoteAddress;
@@ -68,7 +67,7 @@ public abstract class AbstractChannel implements Channel {
     @SuppressWarnings("FieldCanBeLocal")
     private volatile int closed = FALSE;
 
-    public AbstractChannel(SocketChannel socketChannel, boolean clientMode) {
+    protected AbstractChannel(SocketChannel socketChannel, boolean clientMode) {
         this.socketChannel = socketChannel;
         this.clientMode = clientMode;
         this.logger = Logger.getLogger(getClass());
@@ -79,6 +78,7 @@ public abstract class AbstractChannel implements Channel {
         return clientMode;
     }
 
+    @Override
     public ConcurrentMap attributeMap() {
         return attributeMap;
     }
@@ -163,7 +163,7 @@ public abstract class AbstractChannel implements Channel {
 
     /**
      * Template method that is called when the Channel is closed.
-     *
+     * <p>
      * It will be called only once.
      */
     protected void close0() throws IOException {

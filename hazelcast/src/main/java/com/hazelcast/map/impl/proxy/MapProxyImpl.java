@@ -759,6 +759,7 @@ public class MapProxyImpl<K, V> extends MapProxySupport<K, V> implements EventJo
     @Nonnull
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
+        incrementEntrySetCallCount();
         return entrySet(Predicates.alwaysTrue());
     }
 
@@ -788,6 +789,7 @@ public class MapProxyImpl<K, V> extends MapProxySupport<K, V> implements EventJo
     @Nonnull
     @Override
     public Collection<V> values() {
+        incrementValuesCallCount();
         return values(Predicates.alwaysTrue());
     }
 
@@ -1357,6 +1359,7 @@ public class MapProxyImpl<K, V> extends MapProxySupport<K, V> implements EventJo
         }
     }
 
+    @Override
     public V compute(@Nonnull K key, @Nonnull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         checkNotNull(key, NULL_KEY_IS_NOT_ALLOWED);
         checkNotNull(remappingFunction, NULL_BIFUNCTION_IS_NOT_ALLOWED);
@@ -1399,6 +1402,7 @@ public class MapProxyImpl<K, V> extends MapProxySupport<K, V> implements EventJo
         }
     }
 
+    @Override
     public V merge(@Nonnull K key, @Nonnull V value,
                    @Nonnull BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         checkNotNull(key, NULL_KEY_IS_NOT_ALLOWED);

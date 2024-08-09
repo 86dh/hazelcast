@@ -35,7 +35,6 @@ import javassist.bytecode.ClassFile;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
@@ -49,8 +48,9 @@ import org.junit.experimental.categories.Category;
 
 import javax.annotation.Nonnull;
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -124,8 +124,8 @@ public class CustomFormatTest extends BaseFileFormatTest {
         @SuppressWarnings("unchecked")
         public <T> FunctionEx<Path, Stream<T>> createReadFileFn(@Nonnull FileFormat<T> format) {
             return path -> {
-                try (FileInputStream fin = new FileInputStream(path.toFile())) {
-                    ClassFile classFile = new ClassFile(new DataInputStream(fin));
+                try (InputStream inputStream = Files.newInputStream(path)) {
+                    ClassFile classFile = new ClassFile(new DataInputStream(inputStream));
                     return (Stream<T>) Stream.of(classFile);
                 } catch (IOException e) {
                     throw new JetException(e);
@@ -164,7 +164,7 @@ public class CustomFormatTest extends BaseFileFormatTest {
 
         @Override
         public RecordReader<NullWritable, Object> createRecordReader(InputSplit split, TaskAttemptContext context) {
-            return new RecordReader<NullWritable, Object>() {
+            return new RecordReader<>() {
 
                 private transient ClassFile current;
                 private FileSplit fileSplit;
@@ -182,12 +182,9 @@ public class CustomFormatTest extends BaseFileFormatTest {
                     if (!processed) {
                         org.apache.hadoop.fs.Path file = fileSplit.getPath();
                         FileSystem fs = file.getFileSystem(conf);
-                        FSDataInputStream in = null;
-                        try {
-                            in = fs.open(file);
+
+                        try (FSDataInputStream in = fs.open(file)) {
                             current = new ClassFile(in);
-                        } finally {
-                            IOUtils.closeStream(in);
                         }
                         processed = true;
                         return true;

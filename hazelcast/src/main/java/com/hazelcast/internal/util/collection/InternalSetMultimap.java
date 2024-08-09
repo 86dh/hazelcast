@@ -28,10 +28,10 @@ import static com.hazelcast.internal.util.Preconditions.checkNotNull;
 /**
  * Simplistic implementation of MultiMap.
  * It's not thread-safe, concurrent access has to be externally synchronized.
- *
+ * <p>
  * It does not allow duplicates: The same value can be associated with the same key once only. Duplicates are
  * eliminated.
- *
+ * <p>
  * The name has a prefix Internal- to avoid confusion with {@link MultiMap}
  *
  * @param <K>
@@ -46,9 +46,6 @@ public class InternalSetMultimap<K, V> {
 
     /**
      * Associate value to a given key. It has no effect if the value is already associated with the key.
-     *
-     * @param key
-     * @param value
      */
     public void put(K key, V value) {
         checkNotNull(key, "Key cannot be null");
@@ -60,9 +57,6 @@ public class InternalSetMultimap<K, V> {
 
     /**
      * Return Set of values associated with a given key
-     *
-     * @param key
-     * @return
      */
     public Set<V> get(K key) {
         checkNotNull(key, "Key cannot be null");

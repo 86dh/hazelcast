@@ -16,15 +16,19 @@
 
 package com.hazelcast.client;
 
-import com.hazelcast.client.config.SubsetRoutingConfig;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.RoutingStrategy;
 import com.hazelcast.client.impl.ClientExtension;
 import com.hazelcast.client.impl.clientside.DefaultClientExtension;
+import com.hazelcast.client.impl.clientside.HazelcastClientInstanceImpl;
+import com.hazelcast.client.impl.connection.tcp.RoutingMode;
 import com.hazelcast.client.impl.spi.ClientProxyFactory;
 import com.hazelcast.client.impl.spi.impl.ClientClusterServiceImpl;
 import com.hazelcast.config.InvalidConfigurationException;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.map.impl.MapService;
+import com.hazelcast.spi.properties.HazelcastProperties;
 import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.ParallelJVMTest;
@@ -57,13 +61,17 @@ public class ClientExtensionTest extends HazelcastTestSupport {
     }
 
     @Test
-    public void test_createClientClusterServiceWithSubsetRouting_throwsInvalidConfigurationException() {
-        String expectedMsg = "Subset routing is an enterprise feature since 5.5. "
+    public void test_createClientClusterServiceWithMultiMemberRouting_throwsInvalidConfigurationException() {
+        String expectedMsg = "MULTI_MEMBER routing is an enterprise feature since 5.5. "
                 + "You must use Hazelcast enterprise to enable this feature.";
         ClientExtension clientExtension = new DefaultClientExtension();
-        SubsetRoutingConfig subsetRoutingConfig = new SubsetRoutingConfig().setEnabled(true);
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.getNetworkConfig().getClusterRoutingConfig().setRoutingMode(RoutingMode.MULTI_MEMBER)
+                .setRoutingStrategy(RoutingStrategy.PARTITION_GROUPS);
+        HazelcastClientInstanceImpl clientMock = mock(HazelcastClientInstanceImpl.class);
+        when(clientMock.getClientConfig()).thenReturn(clientConfig);
 
-        Assertions.assertThatThrownBy(() -> clientExtension.createClientClusterService(null, subsetRoutingConfig))
+        Assertions.assertThatThrownBy(() -> clientExtension.createClientClusterService(clientMock))
                 .isInstanceOf(InvalidConfigurationException.class)
                 .hasMessageContaining(expectedMsg);
     }
@@ -73,8 +81,14 @@ public class ClientExtensionTest extends HazelcastTestSupport {
         ClientExtension clientExtension = new DefaultClientExtension();
         LoggingService loggingService = mock(LoggingService.class);
         when(loggingService.getLogger(any(Class.class))).thenReturn(mock(ILogger.class));
+        HazelcastClientInstanceImpl clientMock = mock(HazelcastClientInstanceImpl.class);
+
+        when(clientMock.getLoggingService()).thenReturn(loggingService);
+        when(clientMock.getClientConfig()).thenReturn(new ClientConfig());
+        when(clientMock.getProperties()).thenReturn(mock(HazelcastProperties.class));
+
         assertInstanceOf(ClientClusterServiceImpl.class,
-                clientExtension.createClientClusterService(loggingService, new SubsetRoutingConfig()));
+                clientExtension.createClientClusterService(clientMock));
     }
 
     private static class TestService {

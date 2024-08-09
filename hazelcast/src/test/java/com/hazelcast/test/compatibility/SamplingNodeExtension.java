@@ -18,6 +18,7 @@ package com.hazelcast.test.compatibility;
 
 import com.hazelcast.auditlog.AuditlogService;
 import com.hazelcast.auditlog.impl.NoOpAuditlogService;
+import com.hazelcast.client.impl.ClientEngine;
 import com.hazelcast.cluster.ClusterState;
 import com.hazelcast.config.SSLConfig;
 import com.hazelcast.cp.CPSubsystem;
@@ -204,6 +205,7 @@ public class SamplingNodeExtension implements NodeExtension {
         nodeExtension.beforeClusterStateChange(currState, requestedState, isTransient);
     }
 
+    @Override
     public void onInitialClusterState(ClusterState initialState) {
         nodeExtension.onInitialClusterState(initialState);
     }
@@ -302,6 +304,7 @@ public class SamplingNodeExtension implements NodeExtension {
         return NoOpAuditlogService.INSTANCE;
     }
 
+    @Override
     public CPPersistenceService getCPPersistenceService() {
         return nodeExtension.getCPPersistenceService();
     }
@@ -335,5 +338,10 @@ public class SamplingNodeExtension implements NodeExtension {
     @Override
     public TpcServerBootstrap createTpcServerBootstrap() {
         return new TpcServerBootstrapImpl(null);
+    }
+
+    @Override
+    public ClientEngine createClientEngine() {
+        return nodeExtension.createClientEngine();
     }
 }

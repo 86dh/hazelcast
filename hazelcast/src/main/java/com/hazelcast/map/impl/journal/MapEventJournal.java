@@ -25,7 +25,7 @@ import com.hazelcast.internal.services.ObjectNamespace;
  * The event journal is a container for events related to a data structure.
  * This interface provides methods for map event journals. This includes
  * events such as add, update, remove, evict and others. Each map and
- * partition has it's own event journal.
+ * partition has its own event journal.
  * <p>
  * If a map is destroyed or the migrated, the related event journal will be destroyed or
  * migrated as well. In this sense, the event journal is co-located with the map partition
@@ -125,5 +125,6 @@ public interface MapEventJournal extends EventJournal<InternalEventJournalMapEve
      * @param namespace the object namespace
      * @return {@code true} if the object has a configured and enabled event journal, {@code false} otherwise
      */
+    @Override
     boolean hasEventJournal(ObjectNamespace namespace);
 }

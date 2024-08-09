@@ -28,9 +28,9 @@ import java.util.Set;
 /**
  * Simplistic implementation of MultiMap.
  * It's not thread-safe, concurrent access has to be externally synchronized.
- *
+ * <p>
  * It allows duplicates: The same value can be associated with the same key multiple times
- *
+ * <p>
  * The name has a prefix Internal- to avoid confusion with {@link MultiMap}
  *
  * @param <K>
@@ -45,9 +45,6 @@ public class InternalListMultiMap<K, V> {
 
     /**
      * Put value to a given key. It allows duplicates under the same key
-     *
-     * @param key
-     * @param value
      */
     public void put(K key, V value) {
         List<V> values = backingMap.computeIfAbsent(key, x -> new ArrayList<>());
@@ -56,9 +53,6 @@ public class InternalListMultiMap<K, V> {
 
     /**
      * Return collection of values associated with a given key
-     *
-     * @param key
-     * @return
      */
     public Collection<V> get(K key) {
         return backingMap.get(key);

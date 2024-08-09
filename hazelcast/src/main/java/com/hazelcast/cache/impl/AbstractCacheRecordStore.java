@@ -79,7 +79,7 @@ import javax.cache.processor.EntryProcessor;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -134,7 +134,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     protected final ClearExpiredRecordsTask clearExpiredRecordsTask;
     protected final SamplingEvictionStrategy<Data, R, CRM> evictionStrategy;
     protected final EvictionPolicyEvaluator<Data, R> evictionPolicyEvaluator;
-    protected final Map<CacheEventType, Set<CacheEventData>> batchEvent = new HashMap<>();
+    protected final Map<CacheEventType, Set<CacheEventData>> batchEvent = new EnumMap<>(CacheEventType.class);
     protected final CompositeCacheRSMutationObserver compositeCacheRSMutationObserver;
 
     protected boolean primary;
@@ -205,6 +205,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
         init();
     }
 
+    @Override
     public SerializationService getSerializationService() {
         return ss;
     }
@@ -884,8 +885,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
                 inMemoryExpiryPolicy = toValue(expiryPolicy);
                 dataOldExpiryPolicy = toData(getExpiryPolicyOrNull(record));
                 break;
-            case BINARY:
-            case NATIVE:
+            case BINARY, NATIVE:
                 inMemoryExpiryPolicy = toData(expiryPolicy);
                 dataOldExpiryPolicy = toData(getExpiryPolicyOrNull(record));
                 break;
@@ -907,8 +907,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
             return null;
         }
         switch (cacheConfig.getInMemoryFormat()) {
-            case NATIVE:
-            case BINARY:
+            case NATIVE, BINARY:
                 return policyData;
             case OBJECT:
                 return toValue(policyData);
@@ -1235,6 +1234,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
         }
     }
 
+    @Override
     public void evictExpiredEntries(int expirationPercentage) {
         long now = Clock.currentTimeMillis();
         int maxIterationCount = getMaxIterationCount(size(), expirationPercentage);
@@ -1660,8 +1660,6 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
      * <p>
      * The expiration task runs on only primary replicas. Expiration on backup replicas are dictated by primary replicas. However,
      * it is still important to mark a backup replica as expirable because it might be promoted to be the primary in a later time.
-     *
-     * @param expiryTime
      */
     protected void markExpirable(long expiryTime) {
         if (expiryTime > 0 && expiryTime < Long.MAX_VALUE) {

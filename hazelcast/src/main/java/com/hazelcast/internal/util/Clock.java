@@ -22,12 +22,12 @@ import static com.hazelcast.internal.util.ExceptionUtil.rethrow;
 
 /**
  * Abstracts the system clock to simulate different clocks without changing the actual system time.
- *
+ * <p>
  * Can be used to simulate different time zones or to control timing related behavior in Hazelcast.
- *
+ * <p>
  * The time offset can be configured with the property {@value ClockProperties#HAZELCAST_CLOCK_OFFSET}.
  * The clock implementation can be configured with the property {@value ClockProperties#HAZELCAST_CLOCK_IMPL}.
- *
+ * <p>
  * <b>WARNING:</b> This class is a singleton.
  * Once the class has been initialized, the clock implementation or offset cannot be changed.
  * To use this class properly in unit or integration tests, please have a look at {@code ClockIntegrationTest}.
@@ -46,8 +46,6 @@ public final class Clock {
 
     /**
      * Converts from configured clock implementation offset to JVM time offset
-     * @param millis
-     * @return
      */
     public static long toSystemCurrentTimeMillis(long millis) {
         return CLOCK.toSystemCurrentTimeMillis(millis);
@@ -97,8 +95,6 @@ public final class Clock {
          * and {@link ClockImpl#currentTimeMillis()} to given millisecond
          * offset. An implementation of this abstract class may choose
          * to override this.
-         * @param millis
-         * @return
          */
         protected long toSystemCurrentTimeMillis(long millis) {
             return millis + (System.currentTimeMillis() - currentTimeMillis());

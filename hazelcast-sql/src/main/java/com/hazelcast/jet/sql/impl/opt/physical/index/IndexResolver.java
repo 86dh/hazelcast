@@ -205,7 +205,7 @@ public final class IndexResolver {
 
                 rels.add(relAscending);
 
-                if (relAscCollation.getFieldCollations().size() > 0) {
+                if (!relAscCollation.getFieldCollations().isEmpty()) {
                     RelNode relDescending = replaceCollationDirection(relAscending, DESCENDING);
                     rels.add(relDescending);
 
@@ -1231,7 +1231,6 @@ public final class IndexResolver {
      *
      * @param filters         all per-column filters
      * @param lastFilter      the last filter (range)
-     * @param indexType
      * @param componentsCount number of components in the filter
      * @return range filter
      */

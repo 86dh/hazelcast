@@ -81,7 +81,7 @@ public class MessageTaskSecurityTest {
 
     static {
         skip(AddBackupListenerMessageTask.class,
-                "Adds listener called for every invocation for smart clients if backupAcks are enabled");
+                "Adds listener called for every invocation for ALL_MEMBERS routing clients if backupAcks are enabled");
         skip(AddClusterViewListenerMessageTask.class, "Adds listener for listening to member list and partition table changes");
         skip(AddDistributedObjectListenerMessageTask.class, "Adds distributed object listener by user's request");
         skip(AddMigrationListenerMessageTask.class, "Adds an internal listener");
@@ -114,7 +114,7 @@ public class MessageTaskSecurityTest {
     public void testGetRequiredPermissions() throws Exception {
         Reflections reflections = new Reflections("com.hazelcast");
         Set<Class<? extends AbstractMessageTask>> subTypes = reflections.getSubTypesOf(AbstractMessageTask.class);
-        for (Class clazz : subTypes) {
+        for (Class<?> clazz : subTypes) {
             if (!Modifier.isAbstract(clazz.getModifiers())) {
                 assertGetRequiredPermission(clazz.getName());
             }

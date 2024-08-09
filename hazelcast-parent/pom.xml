@@ -23,7 +23,7 @@
     <groupId>com.hazelcast</groupId>
     <artifactId>hazelcast-parent</artifactId>
     <packaging>pom</packaging>
-    <version>5.5.0-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
 
     <name>Hazelcast Parent POM</name>
     <description>Provides a base configuration for Hazelcast Platform builds</description>
@@ -77,32 +77,37 @@
         <os.maven.plugin.version>1.7.1</os.maven.plugin.version>
 
         <antlr4.version>4.9.3</antlr4.version>
-        <avro.version>1.11.3</avro.version>
-        <aws.sdk.version>1.12.751</aws.sdk.version>
+        <avro.version>1.12.0</avro.version>
+        <aws.sdk.version>1.12.767</aws.sdk.version>
+        <aws.sdk2.version>2.27.0</aws.sdk2.version>
         <calcite.version>1.35.0</calcite.version>
         <classgraph.version>4.8.174</classgraph.version>
         <debezium.version>1.9.8.Final</debezium.version>
         <new.debezium.version>2.6.0.Final</new.debezium.version>
         <grpc.version>1.60.0</grpc.version>
-        <hadoop.version>3.3.6</hadoop.version>
-        <h2.version>2.2.224</h2.version>
+        <hadoop.version>3.4.0</hadoop.version>
+        <h2.version>2.3.230</h2.version>
         <gson.version>2.10.1</gson.version>
-        <jackson.version>2.17.1</jackson.version>
+        <jackson.version>2.17.2</jackson.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <jline.version>3.26.2</jline.version>
+        <jline.version>3.26.3</jline.version>
         <jms.api.version>3.1.0</jms.api.version>
         <json-surfer.version>0.11</json-surfer.version>
         <jsr107.api.version>1.1.1</jsr107.api.version> <!-- JCache -->
-        <kafka.version>3.6.1</kafka.version>
-        <kotlin.version>2.0.0</kotlin.version>
+        <!--
+        Confluent depends on Kafka, and consideration should be given when upgrading
+        https://docs.confluent.io/platform/current/installation/versions-interoperability.html#cp-and-apache-ak-compatibility
+        -->
+        <kafka.version>3.7.1</kafka.version>
+        <kotlin.version>2.0.10</kotlin.version>
         <reload4j.version>1.2.25</reload4j.version>
-        <mssql.version>12.6.3.jre11</mssql.version>
-        <netty.version>4.1.111.Final</netty.version>
+        <mssql.version>12.8.0.jre11</mssql.version>
+        <netty.version>4.1.112.Final</netty.version>
         <objenesis.version>3.3</objenesis.version>
-        <oracle.version>23.4.0.24.05</oracle.version>
+        <oracle.version>23.5.0.24.07</oracle.version>
         <osgi.version>4.2.0</osgi.version>
-        <parquet.version>1.13.1</parquet.version>
+        <parquet.version>1.14.1</parquet.version>
         <picocli.version>4.7.6</picocli.version>
         <postgresql.version>42.7.3</postgresql.version>
         <prometheus.version>0.20.0</prometheus.version>
@@ -116,33 +121,37 @@
         <python.protobuf.version>4.${protobuf.version}</python.protobuf.version>
 
         <scala.version>2.13</scala.version>
-        <slf4j.version>2.0.13</slf4j.version>
+        <slf4j.version>2.0.14</slf4j.version>
         <spring.version>4.3.0.RELEASE</spring.version>
         <snakeyaml.version>2.2</snakeyaml.version>
         <snakeyaml.engine.version>2.7</snakeyaml.engine.version>
         <mongodb.version>4.11.1</mongodb.version>
 
         <!-- test dependencies -->
-        <activemq-artemis.version>2.35.0</activemq-artemis.version>
-        <assertj.version>3.26.0</assertj.version>
+        <activemq-artemis.version>2.36.0</activemq-artemis.version>
+        <assertj.version>3.26.3</assertj.version>
         <atomikos.version>3.9.3</atomikos.version>
-        <bytebuddy.version>1.14.17</bytebuddy.version>
-        <commons-codec.version>1.17.0</commons-codec.version>
+        <bytebuddy.version>1.14.18</bytebuddy.version>
+        <commons-codec.version>1.17.1</commons-codec.version>
         <commons-io.version>2.16.1</commons-io.version>
-        <commons-lang3.version>3.14.0</commons-lang3.version>
-        <confluent.version>7.6.1</confluent.version>
+        <commons-lang3.version>3.16.0</commons-lang3.version>
+        <!--
+        Confluent depends on Kafka, and consideration should be given when upgrading
+        https://docs.confluent.io/platform/current/installation/versions-interoperability.html#cp-and-apache-ak-compatibility
+        -->
+        <confluent.version>7.7.0</confluent.version>
         <felix.utils.version>1.11.6</felix.utils.version>
         <http.core.version>4.4.16</http.core.version>
         <http.client.version>4.5.14</http.client.version>
         <jsr107.tck.version>1.1.1</jsr107.tck.version>
-        <wiremock.version>3.7.0</wiremock.version>
-        <reflections.version>0.9.10</reflections.version>
+        <wiremock.version>3.9.1</wiremock.version>
+        <reflections.version>0.10.2</reflections.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <jna.version>5.14.0</jna.version>
         <!--  When updating archunit.version, check/remove Java version assumptions in ArchUnitTestSupport -->
         <archunit.version>1.3.0</archunit.version>
-        <errorprone.version>2.28.0</errorprone.version>
-        <awaitility.version>4.2.1</awaitility.version>
+        <errorprone.version>2.29.2</errorprone.version>
+        <awaitility.version>4.2.2</awaitility.version>
         <hikari.version>5.1.0</hikari.version>
         <checkstyle.version>10.17.0</checkstyle.version>
 
@@ -212,7 +221,7 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-bom</artifactId>
-                <version>9.4.54.v20240208</version>
+                <version>9.4.55.v20240627</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -241,7 +250,7 @@
             <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
-                <version>3.7.0</version>
+                <version>${kafka.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
@@ -376,7 +385,7 @@
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.3.2</version>
+                <version>1.3.3</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -396,7 +405,7 @@
             <dependency>
                 <groupId>org.xerial.snappy</groupId>
                 <artifactId>snappy-java</artifactId>
-                <version>1.1.10.5</version>
+                <version>1.1.10.6</version>
             </dependency>
             <dependency>
                 <groupId>com.microsoft.sqlserver</groupId>
@@ -406,7 +415,7 @@
             <dependency>
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
-                <version>8.4.0</version>
+                <version>9.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>
@@ -456,6 +465,11 @@
                 <version>${aws.sdk.version}</version>
             </dependency>
             <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bundle</artifactId>
+                <version>${aws.sdk2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
@@ -468,7 +482,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.6-3</version>
+                <version>1.5.6-4</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -486,11 +500,12 @@
                 <groupId>org.jline</groupId>
                 <artifactId>jline</artifactId>
                 <version>${jline.version}</version>
+                <classifier>jdk8</classifier>
             </dependency>
             <dependency>
                 <groupId>org.checkerframework</groupId>
                 <artifactId>checker-qual</artifactId>
-                <version>3.44.0</version>
+                <version>3.46.0</version>
             </dependency>
             <dependency>
                 <groupId>org.antlr</groupId>
@@ -566,7 +581,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.10.2</version>
+                <version>5.10.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -621,7 +636,7 @@
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client-bom</artifactId>
-                <version>6.13.0</version>
+                <version>6.13.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -650,7 +665,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.42.0</version>
+                <version>26.43.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -685,7 +700,7 @@
             <dependency>
                 <groupId>org.neo4j.driver</groupId>
                 <artifactId>neo4j-java-driver</artifactId>
-                <version>5.21.0</version>
+                <version>5.23.0</version>
             </dependency>
             <dependency>
                 <groupId>org.jctools</groupId>
@@ -740,12 +755,49 @@
                                 </excludes>
                             </filter>
                         </filters>
+                        <relocations combine.children="append">
+                            <!--
+                            The default value of combine.self and combine.children attributes is "merge", which
+                            merges the configurations of the parent and child modules in an element-wise manner.
+                            For example, if the i-th <relocation> in this module uses <rawString>, the i-th
+                            <relocation> in every submodule that does not override the <configuration>
+                            (by specifying <configuration combine.self="override">) inherits <rawString>. See also:
+                            https://github.com/codehaus-plexus/plexus-utils/blob/plexus-utils-3.5.1/src/main/java/org/codehaus/plexus/util/xml/Xpp3Dom.java#L382-L418
+                            When computing the effective configurations for this module, only the combine.* attributes
+                            declared in this POM are considered. However, combine.* attributes are inherited from
+                            parent to child POMs (but not to nested elements), so that it is enough to specify
+                            <relocations combine.children="append"> in this module instead of in every submodule.
+                            See also: https://maven.apache.org/pom.html#plugins
+                            -->
+                            <relocation>
+                                <!-- Covers non-versioned classes and service providers (META-INF/services/*). -->
+                                <pattern>com.fasterxml.jackson</pattern>
+                                <shadedPattern>${relocation.root}.com.fasterxml.jackson</shadedPattern>
+                                <excludes>
+                                    <!--
+                                    The annotation package is excluded so the relocated classes are able
+                                    to process non-relocated annotations, which are used by the users.
+                                    -->
+                                    <exclude>com.fasterxml.jackson.annotation.*</exclude>
+                                </excludes>
+                            </relocation>
+                            <relocation>
+                                <!--
+                                We use rawString to relocate versioned classes (META-INF/versions/{n}/**),
+                                where lookbehind is necessary to avoid matching already relocated classes.
+                                See also: https://issues.apache.org/jira/browse/MSHADE-406
+                                -->
+                                <pattern>(?&lt;=META-INF/versions/\d{1,2}/)com/fasterxml/jackson(?!/annotation)</pattern>
+                                <shadedPattern>${relocation.dir}/com/fasterxml/jackson</shadedPattern>
+                                <rawString>true</rawString>
+                            </relocation>
+                        </relocations>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.7.0</version>
+                    <version>3.8.0</version>
                     <configuration>
                         <!-- Allows generation when non-JPMS dependencies (e.g. Groovy) are on classpath -->
                         <legacyMode>true</legacyMode>
@@ -767,7 +819,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>3.3.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -930,7 +982,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>3.3.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -965,7 +1017,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>3.4.0</version>
                 </plugin>
                 <plugin>
                     <groupId>pl.project13.maven</groupId>
@@ -980,7 +1032,7 @@
                 <plugin>
                     <groupId>org.owasp</groupId>
                     <artifactId>dependency-check-maven</artifactId>
-                    <version>9.2.0</version>
+                    <version>10.0.3</version>
                     <configuration>
                         <format>ALL</format>
                         <skipProvidedScope>true</skipProvidedScope>
@@ -1036,21 +1088,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.hazelcast.maven</groupId>
-                <artifactId>attribution-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>per-jar-attribution</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <outputFile>${project.build.outputDirectory}/META-INF/attribution.txt</outputFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
@@ -1097,7 +1134,7 @@
                     <execution>
                         <phase>validate</phase>
                         <goals>
-                            <goal>checkstyle</goal>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -1121,7 +1158,7 @@
     <profiles>
         <profile>
             <!--
-            Enables faster local builds, by skipping ome validation steps (e.g. Checkstyle)
+            Enables faster local builds, by skipping some validation steps (e.g. Checkstyle)
             -->
             <id>quick</id>
             <activation>
@@ -1140,12 +1177,6 @@
                 <maven.javadoc.skip>true</maven.javadoc.skip>
                 <!-- https://maven.apache.org/enforcer/maven-enforcer-plugin/enforce-mojo.html#skip -->
                 <enforcer.skip>true</enforcer.skip>
-                <!-- https://github.com/hazelcast/attribution-maven-plugin?tab=readme-ov-file#configuration-properties -->
-                <attribution.skip>true</attribution.skip>
-                <!-- https://www.mojohaus.org/license-maven-plugin/add-third-party-mojo.html#skipAddThirdParty -->
-                <license.skipAddThirdParty>true</license.skipAddThirdParty>
-                <!-- https://www.mojohaus.org/license-maven-plugin/aggregate-add-third-party-mojo.html -->
-                <license.skipAggregateAddThirdParty>true</license.skipAggregateAddThirdParty>
                 <!-- https://maven.apache.org/plugins/maven-compiler-plugin/compile-mojo.html#useIncrementalCompilation -->
                 <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
             </properties>
@@ -1172,6 +1203,21 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                     </plugin>
+                    <plugin>
+                        <groupId>com.hazelcast.maven</groupId>
+                        <artifactId>attribution-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>per-jar-attribution</id>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <outputFile>${project.build.outputDirectory}/META-INF/attribution.txt</outputFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -1196,6 +1242,21 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.hazelcast.maven</groupId>
+                        <artifactId>attribution-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>per-jar-attribution</id>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <outputFile>${project.build.outputDirectory}/META-INF/attribution.txt</outputFile>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -1250,7 +1311,21 @@
                             </execution>
                         </executions>
                     </plugin>
-
+                    <plugin>
+                        <groupId>com.hazelcast.maven</groupId>
+                        <artifactId>attribution-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>per-jar-attribution</id>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <outputFile>${project.build.outputDirectory}/META-INF/attribution.txt</outputFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>

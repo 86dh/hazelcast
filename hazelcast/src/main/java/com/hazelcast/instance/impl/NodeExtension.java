@@ -17,6 +17,7 @@
 package com.hazelcast.instance.impl;
 
 import com.hazelcast.auditlog.AuditlogService;
+import com.hazelcast.client.impl.ClientEngine;
 import com.hazelcast.cluster.ClusterState;
 import com.hazelcast.config.SSLConfig;
 import com.hazelcast.cp.CPSubsystem;
@@ -243,7 +244,7 @@ public interface NodeExtension {
     /**
      * Creates additional extension services, which will be registered by
      * service manager during start-up.
-     *
+     * <p>
      * By default, returned map will be empty.
      *
      * @return extension services
@@ -264,7 +265,7 @@ public interface NodeExtension {
 
     /**
      * Creates a <tt>InboundHandler</tt> for given <tt>Connection</tt> instance.
-     *
+     * <p>
      * For TLS and other enterprise features, instead of returning the regular protocol decoder, a TLS decoder
      * can be returned. This is the first item in the chain.
      *
@@ -285,9 +286,6 @@ public interface NodeExtension {
 
     /**
      * Creates the channel initializer function.
-     *
-     * @param serverContext
-     * @return
      */
     Function<EndpointQualifier, ChannelInitializer> createChannelInitializerFn(ServerContext serverContext);
 
@@ -426,6 +424,13 @@ public interface NodeExtension {
     UserCodeNamespaceService getNamespaceService();
 
     TpcServerBootstrap createTpcServerBootstrap();
+
+    /**
+     * Creates an implementation of the {@link ClientEngine} depending on Hazelcast edition.
+     *
+     * @return a new {@link ClientEngine} instance for this member
+     */
+    ClientEngine createClientEngine();
 
     /**
      * @return the license object, if a Hazelcast Enterprise license is configured, otherwise {@code null}

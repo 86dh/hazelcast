@@ -131,7 +131,7 @@ import java.util.function.Function;
  * split-brain protection for {@link IMap}</a>.  Using this functionality
  * it is possible to restrict operations in smaller partitioned clusters.
  * It should be noted that there is still an inconsistency window between
- * the time of the split and the actual detection. Therefore using this
+ * the time of the split and the actual detection. Therefore, using this
  * reduces the window of inconsistency but can never completely eliminate
  * it.
  *
@@ -258,6 +258,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * if the write-behind queue has reached its per-node maximum
      * capacity.
      */
+    @Override
     void putAll(@Nonnull Map<? extends K, ? extends V> m);
 
     /**
@@ -278,6 +279,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified key is {@code null}
      */
+    @Override
     boolean containsKey(@Nonnull Object key);
 
     /**
@@ -285,6 +287,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified value is {@code null}
      */
+    @Override
     boolean containsValue(@Nonnull Object value);
 
     /**
@@ -316,6 +319,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified key is {@code null}
      */
+    @Override
     V get(@Nonnull Object key);
 
     /**
@@ -355,6 +359,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified key or value is null
      */
+    @Override
     V put(@Nonnull K key, @Nonnull V value);
 
     /**
@@ -396,6 +401,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws NullPointerException if the specified key is null
      * @see #delete(Object)
      */
+    @Override
     V remove(@Nonnull Object key);
 
     /**
@@ -427,6 +433,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified key or value is null
      */
+    @Override
     boolean remove(@Nonnull Object key, @Nonnull Object value);
 
     /**
@@ -479,7 +486,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * <p><b>Interactions with the map store</b>
      * <p>
      * If write-through persistence mode is configured, before the value
-     * is removed from the the memory, {@link MapStore#delete(Object)}
+     * is removed from the memory, {@link MapStore#delete(Object)}
      * is called to remove the value from the map store. Exceptions
      * thrown by delete fail the operation and are propagated to the
      * caller.
@@ -495,6 +502,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws NullPointerException if the specified key is null
      * @see #remove(Object)
      */
+    @Override
     void delete(@Nonnull Object key);
 
     /**
@@ -1130,7 +1138,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * <p><b>Interactions with the map store</b>
      * <p>
      * If write-through persistence mode is configured, before the value
-     * is removed from the the memory, {@link MapStore#delete(Object)}
+     * is removed from the memory, {@link MapStore#delete(Object)}
      * is called to remove the value from the map store. Exceptions
      * thrown by delete fail the operation and are propagated to the
      * caller.
@@ -1208,7 +1216,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * <p><b>Interactions with the map store</b>
      * <p>
      * If write-through persistence mode is configured, before the value
-     * is removed from the the memory, {@link MapStore#delete(Object)}
+     * is removed from the memory, {@link MapStore#delete(Object)}
      * is called to remove the value from the map store. Exceptions
      * thrown by delete fail the operation and are propagated to the
      * caller.
@@ -1321,6 +1329,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws UnsupportedOperationException if the underlying map storage doesn't
      *         support TTL-based expiration (all in-memory storages support it).
      */
+    @Override
     V put(@Nonnull K key, @Nonnull V value,
           long ttl, @Nonnull TimeUnit ttlUnit);
 
@@ -1504,6 +1513,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws NullPointerException if the specified {@code key} or {@code value}
      *                              is {@code null}
      */
+    @Override
     V putIfAbsent(@Nonnull K key, @Nonnull V value);
 
     /**
@@ -1666,6 +1676,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if any of the specified parameters are {@code null}
      */
+    @Override
     boolean replace(@Nonnull K key, @Nonnull V oldValue, @Nonnull V newValue);
 
     /**
@@ -1701,6 +1712,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @throws NullPointerException if the specified key or value is {@code null}
      */
+    @Override
     V replace(@Nonnull K key, @Nonnull V value);
 
     /**
@@ -1735,6 +1747,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @param value value of the entry
      * @throws NullPointerException if the specified key or value is {@code null}
      */
+    @Override
     void set(@Nonnull K key, @Nonnull V value);
 
     /**
@@ -2118,7 +2131,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * implement a corresponding {@link MapListener} sub-interface for that event.
      * <p>
      * Note that entries in distributed map are partitioned across
-     * the cluster members; each member owns and manages the some portion of the
+     * the cluster members; each member owns and manages some portion of the
      * entries. Owned entries are called local entries. This
      * listener will be listening for the events of local entries. Let's say
      * your cluster has member1 and member2. On member2 you added a local listener and from
@@ -2408,15 +2421,24 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * The set is <b>NOT</b> backed by the map,
      * so changes to the map are <b>NOT</b> reflected in the set.
      * <p>
-     * This method is always executed by a distributed query,
-     * so it may throw a {@link QueryResultSizeExceededException}
-     * if {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured.
+     * This method performs a distributed query to collect all keys, which may
+     * throw a {@link QueryResultSizeExceededException} if the
+     * {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured and exceeded.
+     * <b>Warning:</b>
+     * <p>
+     * Using this method is not recommended unless the entire set of keys
+     * can fit in a single member's memory. Fetching the entire distributed collection
+     * into one machine can lead to significant memory issues and is typically discouraged
+     * in distributed system design. If you must use this method, it is advisable to configure
+     * the {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} property to avoid potential
+     * {@link OutOfMemoryError}.
      *
      * @return an immutable set clone of the keys contained in this map
      * @throws QueryResultSizeExceededException if query result size limit is exceeded
      * @see ClusterProperty#QUERY_RESULT_SIZE_LIMIT
      */
     @Nonnull
+    @Override
     Set<K> keySet();
 
     /**
@@ -2427,15 +2449,25 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * The collection is <b>NOT</b> backed by the map,
      * so changes to the map are <b>NOT</b> reflected in the collection.
      * <p>
-     * This method is always executed by a distributed query,
-     * so it may throw a {@link QueryResultSizeExceededException}
-     * if {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured.
+     * This method performs a distributed query to collect all values, which may
+     * throw a {@link QueryResultSizeExceededException} if the
+     * {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured and exceeded.
+     * <p>
+     * <b>Warning:</b>
+     * <p>
+     * Using this method is not recommended unless the entire set of values
+     * can fit in a single member's memory. Fetching the entire distributed collection
+     * into one machine can lead to significant memory issues and is typically discouraged
+     * in distributed system design. If you must use this method, it is advisable to configure
+     * the {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} property to avoid potential
+     * {@link OutOfMemoryError}.
      *
      * @return an immutable collection clone of the values contained in this map
      * @throws QueryResultSizeExceededException if query result size limit is exceeded
      * @see ClusterProperty#QUERY_RESULT_SIZE_LIMIT
      */
     @Nonnull
+    @Override
     Collection<V> values();
 
     /**
@@ -2446,15 +2478,25 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * The set is <b>NOT</b> backed by the map,
      * so changes to the map are <b>NOT</b> reflected in the set.
      * <p>
-     * This method is always executed by a distributed query,
-     * so it may throw a {@link QueryResultSizeExceededException}
-     * if {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured.
+     * This method performs a distributed query to collect all entries, which may
+     * throw a {@link QueryResultSizeExceededException} if the
+     * {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} is configured and exceeded.
+     * <p>
+     * <b>Warning:</b>
+     * <p>
+     * Using this method is not recommended unless the entire set of entries
+     * can fit in a single member's memory. Fetching the entire distributed collection
+     * into one machine can lead to significant memory issues and is typically discouraged
+     * in distributed system design. If you must use this method, it is advisable to configure
+     * the {@link ClusterProperty#QUERY_RESULT_SIZE_LIMIT} property to avoid potential
+     * {@link OutOfMemoryError}.
      *
      * @return an immutable set clone of the keys mappings in this map
      * @throws QueryResultSizeExceededException if query result size limit is exceeded
      * @see ClusterProperty#QUERY_RESULT_SIZE_LIMIT
      */
     @Nonnull
+    @Override
     Set<Map.Entry<K, V>> entrySet();
 
     /**
@@ -2478,6 +2520,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws NullPointerException             if the predicate is {@code null}
      * @see ClusterProperty#QUERY_RESULT_SIZE_LIMIT
      */
+    @Override
     Set<K> keySet(@Nonnull Predicate<K, V> predicate);
 
     /**
@@ -2523,6 +2566,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * @throws NullPointerException             if the predicate is {@code null}
      * @see ClusterProperty#QUERY_RESULT_SIZE_LIMIT
      */
+    @Override
     Collection<V> values(@Nonnull Predicate<K, V> predicate);
 
     /**
@@ -3083,7 +3127,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
     QueryCache<K, V> getQueryCache(@Nonnull String name);
 
     /**
-     * Creates an always up to date snapshot of this {@code IMap} according to the supplied parameters.
+     * Creates an always up-to-date snapshot of this {@code IMap} according to the supplied parameters.
      * <p>
      * If there is a previously created {@link QueryCache} with the supplied {@code name}, this method returns that
      * {@link QueryCache} and ignores {@code predicate} and {@code includeValue} parameters. Otherwise it creates and returns
@@ -3109,7 +3153,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
                                    boolean includeValue);
 
     /**
-     * Creates an always up to date snapshot of this {@code IMap} according to
+     * Creates an always up-to-date snapshot of this {@code IMap} according to
      * the supplied parameters.
      * <p>
      * If there is a previously created {@link QueryCache} with the supplied
@@ -3155,7 +3199,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      * <p>
      * If there is no entry with key {@code key} or is already expired, this
      * call makes no changes to entries stored in this map.
-     *
+     * <p>
      * <b>Warning:</b>
      * <p>
      * Time resolution for TTL is seconds. The given TTL value is rounded to
@@ -3193,6 +3237,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @since 4.1
      */
+    @Override
     V computeIfPresent(@Nonnull K key, @Nonnull BiFunction<? super K, ? super V, ? extends V> remappingFunction);
 
     /**
@@ -3217,6 +3262,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @since 4.1
      */
+    @Override
     V computeIfAbsent(@Nonnull K key, @Nonnull Function<? super K, ? extends V> mappingFunction);
 
     /**
@@ -3240,6 +3286,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *     When this method is invoked using a hazelcast-client instance, the {@code action} is always executed locally
      * </p>
      */
+    @Override
     default void forEach(@Nonnull BiConsumer<? super K, ? super V> action) {
         ConcurrentMap.super.forEach(action);
     }
@@ -3266,6 +3313,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @since 4.1
      */
+    @Override
     V compute(@Nonnull K key, @Nonnull BiFunction<? super K, ? super V, ? extends V> remappingFunction);
 
     /**
@@ -3316,13 +3364,14 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
      *
      * @since 4.1
      */
+    @Override
     default void replaceAll(@Nonnull BiFunction<? super K, ? super V, ? extends V> function) {
         ConcurrentMap.super.replaceAll(function);
     }
 
     /**
      * Returns an iterator over the entries of the map. It sequentially
-     * iterates partitions. It starts to iterate on partition 0 and it
+     * iterates partitions. It starts to iterate on partition 0, and it
      * finishes the iteration with the last partition (n = 271 by default).
      * The keys are fetched in batches for the constant heap utilization.
      *
@@ -3336,7 +3385,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, BaseMap<K, V>, Iterable
 
     /**
      * Returns an iterator over the entries of the map. It sequentially
-     * iterates partitions. It starts to iterate on partition 0 and it
+     * iterates partitions. It starts to iterate on partition 0, and it
      * finishes the iteration with the last partition (n = 271 by default).
      * The keys are fetched in batches for the constant heap utilization.
      *

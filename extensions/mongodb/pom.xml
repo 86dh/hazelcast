@@ -31,8 +31,13 @@
     <parent>
         <groupId>com.hazelcast.jet</groupId>
         <artifactId>hazelcast-jet-extensions</artifactId>
-        <version>5.5.0-SNAPSHOT</version>
+        <version>6.0.0-SNAPSHOT</version>
     </parent>
+
+    <properties>
+        <!-- needed for CheckStyle -->
+        <main.basedir>${project.basedir}/../..</main.basedir>
+    </properties>
 
     <build>
         <plugins>
@@ -108,9 +113,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <goals>
-                    <goal>analyze</goal>
-                </goals>
                 <executions>
                     <execution>
                         <id>check-for-transitive-dependencies-usage</id>

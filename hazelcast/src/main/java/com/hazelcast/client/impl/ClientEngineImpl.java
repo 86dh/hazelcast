@@ -63,6 +63,7 @@ import com.hazelcast.spi.impl.operationservice.OperationService;
 import com.hazelcast.spi.impl.operationservice.impl.OperationServiceImpl;
 import com.hazelcast.spi.impl.proxyservice.ProxyService;
 import com.hazelcast.spi.properties.ClusterProperty;
+import com.hazelcast.spi.properties.HazelcastProperty;
 import com.hazelcast.sql.impl.client.SqlAbstractMessageTask;
 import com.hazelcast.transaction.TransactionManagerService;
 
@@ -95,6 +96,22 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         ManagedService, EventPublishingService<ClientEvent, ClientListener> {
 
     /**
+     * A private property to let users control the connection behavior of the client.
+     * <p>
+     * When enabled (true), the member will skip trying to check the target cluster name matches the name
+     * specified in the client. Default is false.
+     * <p>
+     * This property is handy for users who are looking for behaviour similar to Hazelcast 4.0.
+     * {@code true} means cluster name is not considered during authentication.
+     * <p>
+     * <b>NOTE:</b> This property does not skip cluster name checks performed in the DefaultLoginModule,
+     * so authentication for clients can still fail if security is enabled, no credentials are provided,
+     * and the client cluster name does not match the cluster's own name.
+     */
+    public static final HazelcastProperty SKIP_CLUSTER_NAME_CHECK_DURING_CONNECTION =
+            new HazelcastProperty("hazelcast.client.internal.skip.cluster.namecheck.during.connection", false);
+
+    /**
      * Service name to be used in requests.
      */
     public static final String SERVICE_NAME = "hz:core:clientEngine";
@@ -102,8 +119,8 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     private static final int BLOCKING_THREADS_PER_CORE = 20;
     private static final int THREADS_PER_CORE = 1;
     private static final int QUERY_THREADS_PER_CORE = 1;
-    private final Node node;
-    private final NodeEngineImpl nodeEngine;
+    protected final Node node;
+    protected final NodeEngineImpl nodeEngine;
     private final Executor executor;
     private final Executor blockingExecutor;
     private final Executor queryExecutor;
@@ -123,6 +140,7 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     private final AddressChecker addressChecker;
     private final IOBufferAllocator responseBufAllocator = new ConcurrentIOBufferAllocator(4096, true);
     private final boolean tpcEnabled;
+    private final CPGroupViewListenerService cpGroupViewListenerService;
 
     // not final for the testing purposes
     private ClientEndpointStatisticsManager endpointStatisticsManager;
@@ -146,6 +164,7 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         this.endpointStatisticsManager = PhoneHome.isPhoneHomeEnabled(node)
                 ? new ClientEndpointStatisticsManagerImpl() : new NoOpClientEndpointStatisticsManager();
         this.tpcEnabled = nodeEngine.getTpcServerBootstrap().isEnabled();
+        this.cpGroupViewListenerService = createCpGroupViewListenerService();
     }
 
     private ClientExceptionFactory initClientExceptionFactory() {
@@ -225,6 +244,7 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     }
 
     //PETER:
+    @Override
     public void accept(ClientMessage clientMessage) {
         Connection connection = clientMessage.getConnection();
         MessageTask messageTask = messageTaskFactory.create(clientMessage, connection);
@@ -426,6 +446,11 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     }
 
     @Override
+    public CPGroupViewListenerService getCPGroupViewListenerService() {
+        return cpGroupViewListenerService;
+    }
+
+    @Override
     public boolean isClientAllowed(Client client) {
         return ConnectionType.MC_JAVA_CLIENT.equals(client.getClientType()) || clientSelector.select(client);
     }
@@ -554,5 +579,9 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     public void setEndpointStatisticsManager(ClientEndpointStatisticsManager endpointStatisticsManager) {
         // this should only be used in tests
         this.endpointStatisticsManager = endpointStatisticsManager;
+    }
+
+    protected CPGroupViewListenerService createCpGroupViewListenerService() {
+        return new NoOpCPGroupViewListenerService();
     }
 }

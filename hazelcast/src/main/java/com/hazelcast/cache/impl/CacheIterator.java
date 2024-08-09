@@ -66,6 +66,7 @@ public class CacheIterator<K, V>
         advance();
     }
 
+    @Override
     protected List fetch() {
         final OperationService operationService = cacheProxy.getNodeEngine().getOperationService();
         if (prefetchValues) {
@@ -84,7 +85,7 @@ public class CacheIterator<K, V>
 
     private <T> T invoke(OperationService operationService, Operation operation) {
         InternalCompletableFuture<T> f = operationService
-                .invokeOnPartition(CacheService.SERVICE_NAME, operation, partitionIndex);
+                .invokeOnPartition(ICacheService.SERVICE_NAME, operation, partitionIndex);
         return f.joinInternal();
     }
 

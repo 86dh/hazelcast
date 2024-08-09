@@ -113,6 +113,8 @@ public final class ClientConfigXmlGenerator {
         network(gen, clientConfig.getNetworkConfig());
         //Backup Ack To Client
         gen.node("backup-ack-to-client-enabled", clientConfig.isBackupAckToClientEnabled());
+        //CP direct-to-leader operation routing
+        gen.node("cp-direct-to-leader-routing", clientConfig.isCPDirectToLeaderRoutingEnabled());
         //Security
         security(gen, clientConfig.getSecurityConfig());
         //Listeners
@@ -150,10 +152,8 @@ public final class ClientConfigXmlGenerator {
 
     private static void network(XmlGenerator gen, ClientNetworkConfig network) {
         gen.open("network")
-           .node("smart-routing", network.isSmartRouting())
-           .node("subset-routing", null,
-                   "enabled", network.getSubsetRoutingConfig().isEnabled(),
-                   "routing-strategy", network.getSubsetRoutingConfig().getRoutingStrategy())
+           .node("cluster-routing", null,
+                   "mode", network.getClusterRoutingConfig().getRoutingMode().name())
            .node("redo-operation", network.isRedoOperation())
            .node("connection-timeout", network.getConnectionTimeout());
 
